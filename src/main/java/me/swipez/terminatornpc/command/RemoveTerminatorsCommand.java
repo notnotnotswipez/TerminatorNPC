@@ -21,6 +21,7 @@ public class RemoveTerminatorsCommand implements CommandExecutor {
                     terminatorTrait.delete = true;
                     npc.despawn();
                 }
+                SummonTerminatorCommand.terminators.clear();
             }
         }
         return true;
