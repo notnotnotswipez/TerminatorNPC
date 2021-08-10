@@ -1,0 +1,11 @@
+name: TerminatorNPC
+version: ${project.version}
+main: me.swipez.terminatornpc.TerminatorNPC
+api-version: 1.17
+authors: [ notnotnotswipez ]
+depend: [Citizens]
+commands:
+  terminator:
+    usage: /terminator <playername> <number of bots>
+  clearterminators:
+    usage: /clearterminators
