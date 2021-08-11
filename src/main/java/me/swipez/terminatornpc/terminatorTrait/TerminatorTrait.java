@@ -310,7 +310,7 @@ public class TerminatorTrait extends Trait {
     }
 
     private boolean locationIsTeleportable(Location location) {
-        if (location.clone().subtract(0, 1, 0).getBlock().getType().isSolid() && !location.clone().subtract(0, 1, 0).getBlock().isLiquid()) {
+        if (location.clone().subtract(0, 1, 0).getBlock().getType().isSolid() && !location.clone().subtract(0, 1, 0).getBlock().isLiquid() && location.getBlock().getType().isAir()) {
             if (location.clone().add(0, 1, 0).getBlock().getType().isAir()) {
                 return true;
             }
@@ -396,7 +396,7 @@ public class TerminatorTrait extends Trait {
         if (location.distance(getLivingEntity().getLocation()) <= 5){
             if (location.getBlock().getType().isAir() || !location.getBlock().getType().isSolid() || location.getBlock().isLiquid()){
                 for (BlockFace blockFace : placeableBlockFaces){
-                    if (location.getBlock().getRelative(blockFace).getType().isSolid() && !location.getBlock().isLiquid()){
+                    if (location.getBlock().getRelative(blockFace).getType().isSolid() && !location.getBlock().getRelative(blockFace).isLiquid()){
                         return true;
                     }
                 }
