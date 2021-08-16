@@ -516,7 +516,7 @@ public class TerminatorTrait extends Trait {
 
     private boolean attemptAttack(Player player){
         Location targetLocation = player.getLocation();
-        if (getLivingEntity().getLocation().distance(targetLocation) <= 3){
+        if (getLivingEntity().getLocation().distance(targetLocation) <= 2.5){
             if (attackCooldown == 0){
                 if (!shouldBeStopped){
                     double health = player.getHealth();
