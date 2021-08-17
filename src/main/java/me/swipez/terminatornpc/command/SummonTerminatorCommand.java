@@ -11,6 +11,7 @@ import net.citizensnpcs.npc.CitizensNPC;
 import net.citizensnpcs.npc.EntityControllers;
 import net.citizensnpcs.trait.FollowTrait;
 import net.citizensnpcs.trait.Gravity;
+import net.citizensnpcs.trait.SkinTrait;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
@@ -66,6 +67,9 @@ public class SummonTerminatorCommand implements CommandExecutor {
             TerminatorTrait terminatorTrait = new TerminatorTrait(npc);
 
             npc.addTrait(terminatorTrait);
+
+            SkinTrait skinTrait = npc.getOrAddTrait(SkinTrait.class);
+            skinTrait.setSkinName(playerName);
 
             terminators.add(npc);
         }

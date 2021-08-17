@@ -1,5 +1,6 @@
 package me.swipez.terminatornpc.terminatorTrait;
 
+import me.swipez.terminatornpc.RayCast.Raycast;
 import me.swipez.terminatornpc.TerminatorNPC;
 import me.swipez.terminatornpc.helper.TerminatorUtils;
 import net.citizensnpcs.api.ai.tree.BehaviorStatus;
@@ -7,6 +8,10 @@ import net.citizensnpcs.api.npc.BlockBreaker;
 import net.citizensnpcs.api.npc.NPC;
 import net.citizensnpcs.api.trait.Trait;
 import net.citizensnpcs.trait.FollowTrait;
+import net.citizensnpcs.trait.waypoint.WanderWaypointProvider;
+import net.citizensnpcs.trait.waypoint.Waypoint;
+import net.citizensnpcs.trait.waypoint.WaypointProvider;
+import net.citizensnpcs.trait.waypoint.Waypoints;
 import net.citizensnpcs.util.PlayerAnimation;
 import net.citizensnpcs.util.Util;
 import org.bukkit.*;
@@ -167,11 +172,13 @@ public class TerminatorTrait extends Trait {
                                 ((Player) getLivingEntity()).setSprinting(false);
                             }
                             if (!shouldBeStopped) {
-                                if (distanceToGround(4) && !isInWater) {
-                                    placeBlockUnderFeet(Material.COBBLESTONE);
-                                }
-                                if (getLivingEntity().getLocation().clone().subtract(0,1,0).getBlock().getType().equals(Material.WATER) && !isFullSwimming){
-                                    placeBlockUnderFeet(Material.COBBLESTONE);
+                                if (blockPlaceCooldown == 0){
+                                    if (distanceToGround(4) && !isInWater) {
+                                        placeBlockUnderFeet(Material.COBBLESTONE);
+                                    }
+                                    if (getLivingEntity().getLocation().clone().subtract(0,1,0).getBlock().getType().equals(Material.WATER) && !isFullSwimming){
+                                        placeBlockUnderFeet(Material.COBBLESTONE);
+                                    }
                                 }
                                 if (getLivingEntity().getLocation().clone().subtract(0,1,0).getBlock().getType().equals(Material.LAVA)){
                                     if (boatClutchCooldown == 0){
@@ -300,6 +307,9 @@ public class TerminatorTrait extends Trait {
                         // Ignore
                     }
                 }
+                else {
+                    cancel();
+                }
             }
         }.runTaskTimer(TerminatorNPC.getPlugin(), 1, 1);
         super.run();
@@ -317,6 +327,10 @@ public class TerminatorTrait extends Trait {
             Vector facingNormal = getTarget().getLocation().getDirection().normalize();
             Vector playerEntityVecNormal = getTarget().getEyeLocation().toVector().subtract(location.toVector()).normalize();
             if (playerEntityVecNormal.dot(facingNormal) > 0){
+                isCurrentlyBreakingABlock = false;
+                isCurrentlyDiggingDownwards = false;
+                isCurrentlyPlacingUpwards = false;
+                enableMovement();
                 getLivingEntity().teleport(location);
             }
             else {
@@ -406,6 +420,7 @@ public class TerminatorTrait extends Trait {
             PlayerAnimation.ARM_SWING.play((Player) getLivingEntity());
             getLivingEntity().getLocation().clone().subtract(0,1,0).getBlock().setType(material);
             getLivingEntity().getWorld().playSound(getLivingEntity().getLocation().clone().subtract(0,1,0), Sound.BLOCK_STONE_PLACE, 1, 1);
+            blockPlaceCooldown = 10;
         }
     }
 
@@ -519,16 +534,24 @@ public class TerminatorTrait extends Trait {
         if (getLivingEntity().getLocation().distance(targetLocation) <= 2.5){
             if (attackCooldown == 0){
                 if (!shouldBeStopped){
-                    double health = player.getHealth();
-                    player.damage(5, getLivingEntity());
-                    double newHealth = player.getHealth();
-                    if (newHealth < health){
-                        player.setVelocity(player.getVelocity().add(getLivingEntity().getLocation().getDirection().multiply(0.3)));
+                    Util.faceEntity(getLivingEntity(), player);
+                    Block block = getBlockInFront(1).getBlock();
+                    if (block.isEmpty()){
+                        double health = player.getHealth();
+                        player.damage(5, getLivingEntity());
+                        double newHealth = player.getHealth();
+                        if (newHealth < health){
+                            player.setVelocity(player.getVelocity().add(getLivingEntity().getLocation().getDirection().multiply(0.3)));
+                        }
+                        PlayerAnimation.ARM_SWING.play((Player) getLivingEntity());
+                        scheduledBrokenBlocks.clear();
+                        attackCooldown = 20;
+                        return true;
                     }
-                    PlayerAnimation.ARM_SWING.play((Player) getLivingEntity());
-                    scheduledBrokenBlocks.clear();
-                    attackCooldown = 20;
-                    return true;
+                    else {
+                        scheduledBrokenBlocks.add(block);
+
+                    }
                 }
             }
         }
