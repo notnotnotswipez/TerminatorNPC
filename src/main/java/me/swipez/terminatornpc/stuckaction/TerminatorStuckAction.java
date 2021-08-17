@@ -5,7 +5,6 @@ import net.citizensnpcs.api.ai.Navigator;
 import net.citizensnpcs.api.ai.StuckAction;
 import net.citizensnpcs.api.npc.NPC;
 import net.citizensnpcs.api.trait.Trait;
-import org.bukkit.Bukkit;
 
 import java.util.Random;
 

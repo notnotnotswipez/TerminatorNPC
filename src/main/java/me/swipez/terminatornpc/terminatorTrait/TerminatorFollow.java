@@ -1,7 +1,5 @@
 package me.swipez.terminatornpc.terminatorTrait;
 
-import net.citizensnpcs.Settings;
-import net.citizensnpcs.api.ai.flocking.FlockBehavior;
 import net.citizensnpcs.api.ai.flocking.Flocker;
 import net.citizensnpcs.api.ai.flocking.RadiusNPCFlock;
 import net.citizensnpcs.api.ai.flocking.SeparationBehavior;
@@ -14,7 +12,6 @@ import org.bukkit.entity.Player;
 import org.bukkit.entity.Projectile;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
-import org.bukkit.event.player.PlayerTeleportEvent;
 
 import java.util.UUID;
 
@@ -65,7 +62,7 @@ public class TerminatorFollow extends Trait {
     }
 
     public void onSpawn() {
-        this.flock = new Flocker(this.npc, new RadiusNPCFlock(4.0D, 0), new FlockBehavior[]{new SeparationBehavior(1.0D)});
+        this.flock = new Flocker(this.npc, new RadiusNPCFlock(4.0D, 0), new SeparationBehavior(1.0D));
     }
 
     public void run() {

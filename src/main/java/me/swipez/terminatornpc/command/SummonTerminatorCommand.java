@@ -1,16 +1,12 @@
 package me.swipez.terminatornpc.command;
 
-import me.swipez.terminatornpc.TerminatorNPC;
 import me.swipez.terminatornpc.stuckaction.TerminatorStuckAction;
 import me.swipez.terminatornpc.terminatorTrait.TerminatorFollow;
 import me.swipez.terminatornpc.terminatorTrait.TerminatorTrait;
-import net.citizensnpcs.Settings;
 import net.citizensnpcs.api.CitizensAPI;
 import net.citizensnpcs.api.npc.NPC;
 import net.citizensnpcs.npc.CitizensNPC;
 import net.citizensnpcs.npc.EntityControllers;
-import net.citizensnpcs.trait.FollowTrait;
-import net.citizensnpcs.trait.Gravity;
 import net.citizensnpcs.trait.SkinTrait;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
@@ -47,7 +43,7 @@ public class SummonTerminatorCommand implements CommandExecutor {
         for (int i = 0; i < number; i++){
             id++;
             NPC npc = new CitizensNPC(UUID.randomUUID(), id, playerName, EntityControllers.createForType(EntityType.PLAYER), CitizensAPI.getNPCRegistry());
-            npc.spawn(((Player) sender).getLocation());
+            npc.spawn(sender.getLocation());
             npc.data().set(NPC.DEFAULT_PROTECTED_METADATA, false);
 
             npc.getNavigator().getLocalParameters()
@@ -60,7 +56,7 @@ public class SummonTerminatorCommand implements CommandExecutor {
             TerminatorFollow followTrait = new TerminatorFollow();
             followTrait.linkToNPC(npc);
             followTrait.run();
-            followTrait.toggle((Player) sender, false);
+            followTrait.toggle(sender, false);
 
             npc.addTrait(followTrait);
 

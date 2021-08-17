@@ -2,7 +2,6 @@ package me.swipez.terminatornpc.command;
 
 import me.swipez.terminatornpc.terminatorTrait.TerminatorTrait;
 import net.citizensnpcs.api.npc.NPC;
-import net.citizensnpcs.api.trait.Trait;
 import org.bukkit.ChatColor;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;

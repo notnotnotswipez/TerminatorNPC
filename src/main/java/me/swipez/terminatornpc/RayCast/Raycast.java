@@ -19,7 +19,7 @@ public class Raycast
 {
     private final double divider = 100.0;
     private ArrayList<Material> passthroughMaterials;
-    private ArrayList<Location> testedLocations;
+    private final ArrayList<Location> testedLocations;
     private World world;
     private double x;
     private double y;
@@ -75,12 +75,12 @@ public class Raycast
         }
         else if (rayCastType == RaycastType.ENTITY) {
             this.rayCastType = RaycastType.ENTITY;
-            Collection<Entity> entities = (Collection<Entity>)this.world.getNearbyEntities(this.rayCastLocation, 0.01, 0.01, 0.01);
+            Collection<Entity> entities = this.world.getNearbyEntities(this.rayCastLocation, 0.01, 0.01, 0.01);
             while ((entities.size() <= 0 || entities.contains(this.owner)) && length <= this.size * 100.0) {
                 this.testedLocations.add(this.rayCastLocation);
                 ++length;
                 this.computeLocation(new Vector(0.0, 0.0, length + 50.0));
-                entities = (Collection<Entity>)this.world.getNearbyEntities(this.rayCastLocation, 0.01, 0.01, 0.01);
+                entities = this.world.getNearbyEntities(this.rayCastLocation, 0.01, 0.01, 0.01);
                 if (this.showRayCast) {
                     this.world.spawnParticle(Particle.CLOUD, this.rayCastLocation.getX(), this.rayCastLocation.getY(), this.rayCastLocation.getZ(), 0, 0.0, 0.0, 0.0);
                 }
@@ -94,12 +94,12 @@ public class Raycast
             }
         }
         else if (rayCastType == RaycastType.ENTITY_AND_BLOCK) {
-            Collection<Entity> entities = (Collection<Entity>)this.world.getNearbyEntities(this.rayCastLocation, 0.01, 0.01, 0.01);
+            Collection<Entity> entities = this.world.getNearbyEntities(this.rayCastLocation, 0.01, 0.01, 0.01);
             while (this.passthroughMaterials.contains(this.rayCastLocation.getBlock().getType()) && (entities.size() <= 0 || entities.contains(this.owner)) && length <= this.size * 100.0) {
                 this.testedLocations.add(this.rayCastLocation);
                 ++length;
                 this.computeLocation(new Vector(0.0, 0.0, length + 50.0));
-                entities = (Collection<Entity>)this.world.getNearbyEntities(this.rayCastLocation, 0.01, 0.01, 0.01);
+                entities = this.world.getNearbyEntities(this.rayCastLocation, 0.01, 0.01, 0.01);
                 if (this.showRayCast) {
                     this.world.spawnParticle(Particle.CLOUD, this.rayCastLocation.getX(), this.rayCastLocation.getY(), this.rayCastLocation.getZ(), 0, 0.0, 0.0, 0.0);
                 }
@@ -259,7 +259,7 @@ public class Raycast
         ENTITY("ENTITY", 1), 
         BLOCK("BLOCK", 2);
         
-        private RaycastType(final String name, final int ordinal) {
+        RaycastType(final String name, final int ordinal) {
         }
     }
 }

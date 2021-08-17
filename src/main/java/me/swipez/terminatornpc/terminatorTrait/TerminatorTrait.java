@@ -1,17 +1,11 @@
 package me.swipez.terminatornpc.terminatorTrait;
 
-import me.swipez.terminatornpc.RayCast.Raycast;
 import me.swipez.terminatornpc.TerminatorNPC;
 import me.swipez.terminatornpc.helper.TerminatorUtils;
 import net.citizensnpcs.api.ai.tree.BehaviorStatus;
 import net.citizensnpcs.api.npc.BlockBreaker;
 import net.citizensnpcs.api.npc.NPC;
 import net.citizensnpcs.api.trait.Trait;
-import net.citizensnpcs.trait.FollowTrait;
-import net.citizensnpcs.trait.waypoint.WanderWaypointProvider;
-import net.citizensnpcs.trait.waypoint.Waypoint;
-import net.citizensnpcs.trait.waypoint.WaypointProvider;
-import net.citizensnpcs.trait.waypoint.Waypoints;
 import net.citizensnpcs.util.PlayerAnimation;
 import net.citizensnpcs.util.Util;
 import org.bukkit.*;
@@ -23,7 +17,6 @@ import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.scheduler.BukkitRunnable;
-import org.bukkit.scheduler.BukkitTask;
 import org.bukkit.util.Vector;
 
 import java.util.LinkedList;
@@ -35,12 +28,12 @@ public class TerminatorTrait extends Trait {
 
     Random random = new Random();
 
-    private NPC terminator;
+    private final NPC terminator;
     private UUID activeTarget = null;
     private int attackCooldown = 0;
     private int jumpCooldown = 0;
-    private List<Block> scheduledBrokenBlocks = new LinkedList<>();
-    private int state = 0;
+    private final List<Block> scheduledBrokenBlocks = new LinkedList<>();
+    private final int state = 0;
 
     // Built in stuck features only apply if the NPC is just far away it seems. The name is misleading
     boolean isStuck = false;
@@ -151,24 +144,24 @@ public class TerminatorTrait extends Trait {
                             if (isInWater){
                                 if (!getLivingEntity().isSwimming()){
                                     ((Player) getLivingEntity()).setSprinting(true);
-                                    ((Player) getLivingEntity()).setSwimming(true);
+                                    getLivingEntity().setSwimming(true);
                                 }
                                 if (!isFullSwimming){
                                     if (getLivingEntity().getLocation().clone().add(0,1,0).getBlock().isLiquid()){
-                                        ((Player) getLivingEntity()).setGliding(true);
+                                        getLivingEntity().setGliding(true);
                                         isFullSwimming = true;
                                     }
                                 }
                                 else {
                                     if (!getLivingEntity().getLocation().clone().add(0,1,0).getBlock().isLiquid()){
                                         isFullSwimming = false;
-                                        ((Player) getLivingEntity()).setGliding(false);
+                                        getLivingEntity().setGliding(false);
                                     }
                                 }
                             }
                             else {
                                 isFullSwimming = false;
-                                ((Player) getLivingEntity()).setSwimming(false);
+                                getLivingEntity().setSwimming(false);
                                 ((Player) getLivingEntity()).setSprinting(false);
                             }
                             if (!shouldBeStopped) {
@@ -348,9 +341,7 @@ public class TerminatorTrait extends Trait {
 
     private boolean locationIsTeleportable(Location location) {
         if (location.clone().subtract(0, 1, 0).getBlock().getType().isSolid() && !location.clone().subtract(0, 1, 0).getBlock().isLiquid() && location.getBlock().getType().isAir()) {
-            if (location.clone().add(0, 1, 0).getBlock().getType().isAir()) {
-                return true;
-            }
+            return location.clone().add(0, 1, 0).getBlock().getType().isAir();
         }
         return false;
     }
@@ -387,10 +378,7 @@ public class TerminatorTrait extends Trait {
     boolean locationIsVisible(Player player,Location location) {
         Vector facingNormal = player.getLocation().getDirection().normalize();
         Vector playerEntityVecNormal = player.getEyeLocation().toVector().subtract(location.toVector()).normalize();
-        if (playerEntityVecNormal.dot(facingNormal) < 0) {
-            return true;
-        }
-        return false;
+        return playerEntityVecNormal.dot(facingNormal) < 0;
     }
 
     private boolean distanceToGround(int distance){
@@ -670,10 +658,7 @@ public class TerminatorTrait extends Trait {
         if (!TerminatorUtils.isLookingTowards(getLivingEntity().getEyeLocation(), target.getEyeLocation(), 100, 180)){
             return false;
         }
-        if (!getLivingEntity().hasLineOfSight(target)){
-            return false;
-        }
-        return true;
+        return getLivingEntity().hasLineOfSight(target);
     }
 
     private boolean withinMargin(Location firstLocation, Location secondLocation, double margin){
