@@ -199,14 +199,12 @@ public class TerminatorLoadout implements Listener {
                 if (index == 23){
                     if (itemStack.getType().toString().toLowerCase().contains("_axe") || itemStack.getType().toString().toLowerCase().contains("_sword")){
                         SWORD_ITEM = itemStack.getType();
-                        itemStack.setAmount(0);
                         return true;
                     }
                 }
                 if (index == 24){
                     if (itemStack.getType().isBlock()){
                         BLOCK_BUILDING_MATERIAL = itemStack.getType();
-                        itemStack.setAmount(0);
                         return true;
                     }
                 }

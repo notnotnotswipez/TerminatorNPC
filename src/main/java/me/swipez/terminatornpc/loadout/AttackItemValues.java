@@ -4,14 +4,14 @@ public enum AttackItemValues {
     WOODEN_SWORD(4, 1.6),
     STONE_SWORD(5, 1.6),
     IRON_SWORD(4, 1.6),
-    GOLD_SWORD(6, 1.6),
+    GOLDEN_SWORD(6, 1.6),
     DIAMOND_SWORD(7, 1.6),
     NETHERITE_SWORD(8, 1.6),
 
     WOODEN_AXE(7, 0.8),
     STONE_AXE(9, 0.8),
     IRON_AXE(9, 0.9),
-    GOLD_AXE(7, 1),
+    GOLDEN_AXE(7, 1),
     DIAMOND_AXE(9, 1),
     NETHERITE_AXE(10, 1),
 
