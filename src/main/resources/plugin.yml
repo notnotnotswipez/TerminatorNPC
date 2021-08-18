@@ -9,3 +9,5 @@ commands:
     usage: /terminator <playername> <number of bots>
   clearterminators:
     usage: /clearterminators
+  terminatorloadout:
+    usage: /terminatorloadout

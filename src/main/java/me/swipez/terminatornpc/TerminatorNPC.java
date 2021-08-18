@@ -2,6 +2,7 @@ package me.swipez.terminatornpc;
 
 import me.swipez.terminatornpc.command.RemoveTerminatorsCommand;
 import me.swipez.terminatornpc.command.SummonTerminatorCommand;
+import me.swipez.terminatornpc.command.TerminatorLoadoutCommand;
 import net.citizensnpcs.api.npc.NPC;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -13,6 +14,7 @@ public final class TerminatorNPC extends JavaPlugin {
     public void onEnable() {
         plugin = this;
         getCommand("terminator").setExecutor(new SummonTerminatorCommand());
+        getCommand("terminatorloadout").setExecutor(new TerminatorLoadoutCommand());
         getCommand("clearterminators").setExecutor(new RemoveTerminatorsCommand());
     }
 

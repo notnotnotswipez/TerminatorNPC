@@ -1,5 +1,7 @@
 package me.swipez.terminatornpc.command;
 
+import me.swipez.terminatornpc.TerminatorNPC;
+import me.swipez.terminatornpc.loadout.TerminatorLoadout;
 import me.swipez.terminatornpc.stuckaction.TerminatorStuckAction;
 import me.swipez.terminatornpc.terminatorTrait.TerminatorFollow;
 import me.swipez.terminatornpc.terminatorTrait.TerminatorTrait;
@@ -40,6 +42,9 @@ public class SummonTerminatorCommand implements CommandExecutor {
 
 
     private void summonTerminator(String playerName, int number, Player sender){
+        TerminatorLoadoutCommand.terminatorLoadoutHashMap.putIfAbsent(sender.getUniqueId(), new TerminatorLoadout(TerminatorNPC.getPlugin()));
+        TerminatorLoadout terminatorLoadout = TerminatorLoadoutCommand.terminatorLoadoutHashMap.get(sender.getUniqueId());
+
         for (int i = 0; i < number; i++){
             id++;
             NPC npc = new CitizensNPC(UUID.randomUUID(), id, playerName, EntityControllers.createForType(EntityType.PLAYER), CitizensAPI.getNPCRegistry());
@@ -60,7 +65,7 @@ public class SummonTerminatorCommand implements CommandExecutor {
 
             npc.addTrait(followTrait);
 
-            TerminatorTrait terminatorTrait = new TerminatorTrait(npc);
+            TerminatorTrait terminatorTrait = new TerminatorTrait(npc, terminatorLoadout.clone());
 
             npc.addTrait(terminatorTrait);
 

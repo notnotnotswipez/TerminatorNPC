@@ -2,13 +2,18 @@ package me.swipez.terminatornpc.terminatorTrait;
 
 import me.swipez.terminatornpc.TerminatorNPC;
 import me.swipez.terminatornpc.helper.TerminatorUtils;
+import me.swipez.terminatornpc.loadout.ArmorItemValues;
+import me.swipez.terminatornpc.loadout.AttackItemValues;
+import me.swipez.terminatornpc.loadout.TerminatorLoadout;
 import net.citizensnpcs.api.ai.tree.BehaviorStatus;
 import net.citizensnpcs.api.npc.BlockBreaker;
 import net.citizensnpcs.api.npc.NPC;
 import net.citizensnpcs.api.trait.Trait;
+import net.citizensnpcs.api.trait.trait.Equipment;
 import net.citizensnpcs.util.PlayerAnimation;
 import net.citizensnpcs.util.Util;
 import org.bukkit.*;
+import org.bukkit.attribute.Attribute;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.entity.Entity;
@@ -74,7 +79,11 @@ public class TerminatorTrait extends Trait {
     public boolean delete = false;
     public boolean isFullSwimming = false;
 
-    public TerminatorTrait(NPC terminator) {
+    public boolean needsArmorUpdate = true;
+
+    private final TerminatorLoadout terminatorLoadout;
+
+    public TerminatorTrait(NPC terminator, TerminatorLoadout terminatorLoadout) {
         super("terminator");
         this.terminator = terminator;
         location = terminator.getEntity().getLocation();
@@ -85,6 +94,8 @@ public class TerminatorTrait extends Trait {
         placeableBlockFaces.add(BlockFace.SOUTH);
         placeableBlockFaces.add(BlockFace.EAST);
         placeableBlockFaces.add(BlockFace.WEST);
+
+        this.terminatorLoadout = terminatorLoadout;
     }
 
     public void updateTargetOtherWorldLocation(){
@@ -139,6 +150,10 @@ public class TerminatorTrait extends Trait {
                 if (!delete){
                     try {
                         if (npc.isSpawned()) {
+                            if (needsArmorUpdate){
+                                updateArmor();
+                                needsArmorUpdate = false;
+                            }
                             checkForNewTarget();
                             cooldownsDecrement();
                             if (isInWater){
@@ -167,10 +182,10 @@ public class TerminatorTrait extends Trait {
                             if (!shouldBeStopped) {
                                 if (blockPlaceCooldown == 0){
                                     if (distanceToGround(4) && !isInWater) {
-                                        placeBlockUnderFeet(Material.COBBLESTONE);
+                                        placeBlockUnderFeet(terminatorLoadout.getBlockMaterial());
                                     }
                                     if (getLivingEntity().getLocation().clone().subtract(0,1,0).getBlock().getType().equals(Material.WATER) && !isFullSwimming){
-                                        placeBlockUnderFeet(Material.COBBLESTONE);
+                                        placeBlockUnderFeet(terminatorLoadout.getBlockMaterial());
                                     }
                                 }
                                 if (getLivingEntity().getLocation().clone().subtract(0,1,0).getBlock().getType().equals(Material.LAVA)){
@@ -214,7 +229,7 @@ public class TerminatorTrait extends Trait {
                                             if (aboveHeadIsAir()) {
                                                 getLivingEntity().teleport(getLivingEntity().getLocation().clone().add(0,1,0));
                                                 lookDown();
-                                                placeBlockUnderFeet(Material.COBBLESTONE);
+                                                placeBlockUnderFeet(terminatorLoadout.getBlockMaterial());
                                             } else {
                                                 isBreakingWhileUpwards = true;
                                                 Block chosenBrokenBlock = getLivingEntity().getLocation().clone().add(0, 2, 0).getBlock();
@@ -236,7 +251,7 @@ public class TerminatorTrait extends Trait {
                                             chosenBrokenBlock = block;
                                             break;
                                         }
-                                        if (chosenBrokenBlock != null) {
+                                        if (chosenBrokenBlock != null && !chosenBrokenBlock.isEmpty()) {
                                             blockCurrentlyBeingBroken = chosenBrokenBlock;
                                             isCurrentlyBreakingABlock = true;
                                             getProperToolToBreakBlock(chosenBrokenBlock);
@@ -276,6 +291,8 @@ public class TerminatorTrait extends Trait {
                                 respawnTimer--;
                                 if (respawnTimer == 0) {
                                     npc.spawn(location);
+                                    npc.data().set(NPC.DEFAULT_PROTECTED_METADATA, false);
+                                    needsArmorUpdate = true;
                                     setTeleportTimer(3);
                                 }
                             }
@@ -513,23 +530,78 @@ public class TerminatorTrait extends Trait {
         return !withinMargin(blockCurrentlyBeingBroken.getLocation(), getLivingEntity().getLocation(), 3) || blockCurrentlyBeingBroken.getType().isAir();
     }
 
+    private void updateArmor(){
+        Equipment equipment = npc.getOrAddTrait(Equipment.class);
+        List<Double> heartAdditions = new LinkedList<>();
+        if (terminatorLoadout.getHelmetMaterial() != null){
+            equipment.set(Equipment.EquipmentSlot.HELMET, new ItemStack(terminatorLoadout.getHelmetMaterial()));
+            heartAdditions.add(((20*ArmorItemValues.valueOf(terminatorLoadout.getHelmetMaterial().toString()).getHealthMultiplier())-20));
+        }
+        if (terminatorLoadout.getChestplateMaterial() != null){
+            equipment.set(Equipment.EquipmentSlot.CHESTPLATE, new ItemStack(terminatorLoadout.getChestplateMaterial()));
+            heartAdditions.add(((20*ArmorItemValues.valueOf(terminatorLoadout.getChestplateMaterial().toString()).getHealthMultiplier())-20));
+        }
+        if (terminatorLoadout.getLeggingsMaterial() != null){
+            equipment.set(Equipment.EquipmentSlot.LEGGINGS, new ItemStack(terminatorLoadout.getLeggingsMaterial()));
+            heartAdditions.add(((20*ArmorItemValues.valueOf(terminatorLoadout.getLeggingsMaterial().toString()).getHealthMultiplier())-20));
+        }
+        if (terminatorLoadout.getBootsMaterial() != null){
+            equipment.set(Equipment.EquipmentSlot.BOOTS, new ItemStack(terminatorLoadout.getBootsMaterial()));
+            heartAdditions.add(((20*ArmorItemValues.valueOf(terminatorLoadout.getBootsMaterial().toString()).getHealthMultiplier())-20));
+        }
+
+        double total = 0;
+
+        for (Double doubles : heartAdditions){
+            total += doubles;
+        }
+
+        getLivingEntity().getAttribute(Attribute.GENERIC_MAX_HEALTH).setBaseValue(20+total);
+    }
+
+    private double getAttackRangeAddition(){
+        if (terminatorLoadout.getSwordMaterial() == null){
+            return 0.5;
+        }
+        else {
+            return 0;
+        }
+    }
+
     private boolean attemptAttack(Player player){
         Location targetLocation = player.getLocation();
-        if (getLivingEntity().getLocation().distance(targetLocation) <= 2.5){
+        double attackRange = 2.5;
+        double rangeAddition = getAttackRangeAddition();
+        if (getLivingEntity().getLocation().distance(targetLocation) <= (attackRange+rangeAddition)){
             if (attackCooldown == 0){
                 if (!shouldBeStopped){
                     Util.faceEntity(getLivingEntity(), player);
                     Block block = getBlockInFront(1).getBlock();
                     if (block.isEmpty()){
                         double health = player.getHealth();
-                        player.damage(5, getLivingEntity());
+                        double attackDamage;
+                        int cooldown;
+                        if (terminatorLoadout.getSwordMaterial() != null){
+                            setMainHandItem(new ItemStack(terminatorLoadout.getSwordMaterial()));
+                            AttackItemValues attackItemValues = AttackItemValues.valueOf(terminatorLoadout.getSwordMaterial().toString());
+                            attackDamage = attackItemValues.getDamage();
+                            cooldown = attackItemValues.getCooldown();
+                        }
+                        else {
+                            setMainHandItem(null);
+                            attackDamage = AttackItemValues.FIST.getDamage();
+                            cooldown = AttackItemValues.FIST.getCooldown();
+                        }
+
+
+                        player.damage(attackDamage, getLivingEntity());
                         double newHealth = player.getHealth();
                         if (newHealth < health){
                             player.setVelocity(player.getVelocity().add(getLivingEntity().getLocation().getDirection().multiply(0.3)));
                         }
                         PlayerAnimation.ARM_SWING.play((Player) getLivingEntity());
                         scheduledBrokenBlocks.clear();
-                        attackCooldown = 20;
+                        attackCooldown = cooldown;
                         return true;
                     }
                     else {
