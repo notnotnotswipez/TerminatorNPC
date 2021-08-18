@@ -198,12 +198,13 @@ public class TerminatorTrait extends Trait {
                                         }
                                     }
                                 }
-                                if (isCurrentlyPlacingUpwards) {
+                                if (isCurrentlyPlacingUpwards && getLivingEntity().isOnGround()) {
                                     shouldBeStopped = true;
                                     if (blockPlaceCooldown == 0) {
                                         blockPlaceTimeout++;
-                                        if (blockPlaceTimeout >= 20) {
+                                        if (blockPlaceTimeout == 10) {
                                             isCurrentlyPlacingUpwards = false;
+                                            enableMovement();
                                             blockPlaceTimeout = 0;
                                         }
                                         if (isTargeting()) {
@@ -211,22 +212,13 @@ public class TerminatorTrait extends Trait {
                                         }
                                         if (getLivingEntity().isOnGround()) {
                                             if (aboveHeadIsAir()) {
-                                                Location location = getLivingEntity().getLocation().clone().add(0, 1, 0);
-                                                getLivingEntity().teleport(location);
+                                                getLivingEntity().teleport(getLivingEntity().getLocation().clone().add(0,1,0));
                                                 lookDown();
                                                 placeBlockUnderFeet(Material.COBBLESTONE);
                                             } else {
                                                 isBreakingWhileUpwards = true;
                                                 Block chosenBrokenBlock = getLivingEntity().getLocation().clone().add(0, 2, 0).getBlock();
-                                                if (chosenBrokenBlock.getType().equals(Material.DIRT) || chosenBrokenBlock.getType().equals(Material.GRASS_BLOCK) || chosenBrokenBlock.getType().equals(Material.GRAVEL) || chosenBrokenBlock.getType().equals(Material.SAND) || chosenBrokenBlock.getType().equals(Material.SOUL_SAND) || chosenBrokenBlock.getType().equals(Material.SOUL_SOIL)) {
-                                                    setMainHandItem(new ItemStack(Material.DIAMOND_SHOVEL));
-                                                } else if (chosenBrokenBlock.getType().toString().toLowerCase().contains("leaves")) {
-                                                    setMainHandItem(new ItemStack(Material.SHEARS));
-                                                } else if (chosenBrokenBlock.getType().toString().toLowerCase().contains("log")) {
-                                                    setMainHandItem(new ItemStack(Material.DIAMOND_AXE));
-                                                } else {
-                                                    setMainHandItem(new ItemStack(Material.DIAMOND_PICKAXE));
-                                                }
+                                                getProperToolToBreakBlock(chosenBrokenBlock);
                                                 breakBlock(getLivingEntity().getLocation().clone().add(0, 2, 0));
                                             }
                                         }
@@ -247,15 +239,7 @@ public class TerminatorTrait extends Trait {
                                         if (chosenBrokenBlock != null) {
                                             blockCurrentlyBeingBroken = chosenBrokenBlock;
                                             isCurrentlyBreakingABlock = true;
-                                            if (chosenBrokenBlock.getType().equals(Material.DIRT) || chosenBrokenBlock.getType().equals(Material.GRASS_BLOCK) || chosenBrokenBlock.getType().equals(Material.GRAVEL) || chosenBrokenBlock.getType().equals(Material.SAND) || chosenBrokenBlock.getType().equals(Material.SOUL_SAND) || chosenBrokenBlock.getType().equals(Material.SOUL_SOIL)) {
-                                                setMainHandItem(new ItemStack(Material.DIAMOND_SHOVEL));
-                                            } else if (chosenBrokenBlock.getType().toString().toLowerCase().contains("leaves")) {
-                                                setMainHandItem(new ItemStack(Material.SHEARS));
-                                            } else if (chosenBrokenBlock.getType().toString().toLowerCase().contains("log")) {
-                                                setMainHandItem(new ItemStack(Material.DIAMOND_AXE));
-                                            } else {
-                                                setMainHandItem(new ItemStack(Material.DIAMOND_PICKAXE));
-                                            }
+                                            getProperToolToBreakBlock(chosenBrokenBlock);
                                             breakBlock(chosenBrokenBlock.getLocation());
                                             disableMovement();
                                         }
@@ -308,12 +292,24 @@ public class TerminatorTrait extends Trait {
         super.run();
     }
 
+    public void getProperToolToBreakBlock(Block chosenBrokenBlock){
+        if (chosenBrokenBlock.getType().equals(Material.DIRT) || chosenBrokenBlock.getType().equals(Material.GRASS_BLOCK) || chosenBrokenBlock.getType().equals(Material.GRAVEL) || chosenBrokenBlock.getType().equals(Material.SAND) || chosenBrokenBlock.getType().equals(Material.SOUL_SAND) || chosenBrokenBlock.getType().equals(Material.SOUL_SOIL) ) {
+            setMainHandItem(new ItemStack(Material.DIAMOND_SHOVEL));
+        } else if (chosenBrokenBlock.getType().toString().toLowerCase().contains("leaves") || chosenBrokenBlock.getType().toString().toLowerCase().contains("wart")) {
+            setMainHandItem(new ItemStack(Material.SHEARS));
+        } else if (chosenBrokenBlock.getType().toString().toLowerCase().contains("log") || chosenBrokenBlock.getType().toString().toLowerCase().contains("plank") || chosenBrokenBlock.getType().toString().toLowerCase().contains("stem")) {
+            setMainHandItem(new ItemStack(Material.DIAMOND_AXE));
+        } else {
+            setMainHandItem(new ItemStack(Material.DIAMOND_PICKAXE));
+        }
+    }
+
     public void teleportToAvailableSlot(){
         if (!teleportedRecently){
             Location location = getRandomLocation(getTarget().getLocation(), 10, 20);
             int checks = 0;
             while (!locationIsTeleportable(location) && checks != 100 && locationIsVisible(getTarget(), location)){
-                location = getRandomLocation(getTarget().getLocation(), 10, 20);
+                location = getRandomLocation(getTarget().getLocation(), 20, 40);
                 checks++;
             }
 
@@ -607,6 +603,11 @@ public class TerminatorTrait extends Trait {
         else {
             if (withinMargin(location, getLivingEntity().getLocation(), 0.05) && !isInWater){
                 isStuck = true;
+                if (!isCurrentlyPlacingUpwards && !isCurrentlyBreakingABlock && shouldJump && !shouldBeStopped){
+                    if (!getLivingEntity().getLocation().clone().add(0,2,0).getBlock().isEmpty()){
+                        scheduledBrokenBlocks.add(getLivingEntity().getLocation().clone().add(0,2,0).getBlock());
+                    }
+                }
                 if (TerminatorUtils.isLookingTowards(getLivingEntity().getEyeLocation(), getTarget().getEyeLocation(), 90, 110) && !isCurrentlyBreakingABlock && !isCurrentlyPlacingUpwards) {
                     if (!getBlockInFront(1).getBlock().getType().isAir()){
                         scheduledBrokenBlocks.add(getBlockInFront(1).getBlock());
@@ -617,7 +618,7 @@ public class TerminatorTrait extends Trait {
                 }
                 double yDifference = getTargetYDifference();
                 if (!isCurrentlyPlacingUpwards && !isCurrentlyDiggingDownwards && !isCurrentlyBreakingABlock){
-                    if (yDifference >= 2 && getLivingEntity().getLocation().clone().subtract(0,1,0).getBlock().getType().isAir()){
+                    if (yDifference >= 2){
                         isCurrentlyPlacingUpwards = true;
                         centerOnBlock();
                     }
@@ -627,8 +628,9 @@ public class TerminatorTrait extends Trait {
                         isCurrentlyPlacingUpwards = false;
                     }
                 }
-                if (!isCurrentlyDiggingDownwards && !isCurrentlyPlacingUpwards && getLivingEntity().isOnGround() && !isCurrentlyBreakingABlock){
+                if (!isCurrentlyDiggingDownwards && !isCurrentlyPlacingUpwards && !isCurrentlyBreakingABlock){
                     if (yDifference <= -2){
+                        shouldJump = false;
                         isCurrentlyDiggingDownwards = true;
                         centerOnBlock();
                     }
