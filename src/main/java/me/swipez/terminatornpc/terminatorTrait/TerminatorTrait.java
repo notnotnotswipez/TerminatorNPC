@@ -266,7 +266,8 @@ public class TerminatorTrait extends Trait {
                                         }
                                         blockPlaceCooldown = 10;
                                     }
-                                } else {
+                                }
+                                else {
                                     if (!isTargeting()) {
                                         enableMovement();
                                     }
@@ -305,6 +306,9 @@ public class TerminatorTrait extends Trait {
                                             cancelBlockBreaking();
                                         }
                                     }
+                                }
+                                if (!isCurrentlyBreakingABlock && !isCurrentlyPlacingUpwards && !isCurrentlyDiggingDownwards && !isBreakingWhileUpwards){
+                                    shouldJump = true;
                                 }
                                 update();
                                 checkForLocationUpdate();
@@ -708,7 +712,7 @@ public class TerminatorTrait extends Trait {
         if (teleportTimer > 0){
             teleportTimer--;
             if (teleportTimer == 0){
-                if (!locationIsVisible(getTarget(), getLivingEntity().getLocation()) || !withinMargin(getLivingEntity().getLocation(), getTarget().getLocation(), 20)){
+                if (!locationIsVisible(getTarget(), getLivingEntity().getLocation()) || !withinMargin(getLivingEntity().getLocation(), getTarget().getLocation(), 60)){
                     teleportToAvailableSlot();
                     if (debug){
                         Bukkit.getLogger().log(Level.WARNING, "NPC is requesting teleport.");
@@ -766,6 +770,8 @@ public class TerminatorTrait extends Trait {
                             if (debug){
                                 Bukkit.getLogger().log(Level.INFO, "Stopping placing upwards.");
                             }
+                            enableMovement();
+                            shouldJump = true;
                             isCurrentlyPlacingUpwards = false;
                         }
                     }
@@ -787,6 +793,8 @@ public class TerminatorTrait extends Trait {
                                 Bukkit.getLogger().log(Level.INFO, "Stopping digging downwards.");
                             }
                             isCurrentlyDiggingDownwards = false;
+                            shouldJump = true;
+                            enableMovement();
                         }
                     }
                 }
