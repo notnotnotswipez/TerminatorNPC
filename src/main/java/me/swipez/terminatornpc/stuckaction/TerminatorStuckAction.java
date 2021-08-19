@@ -19,8 +19,7 @@ public class TerminatorStuckAction implements StuckAction {
                 TerminatorTrait terminatorTrait = (TerminatorTrait) trait;
                 if (terminatorTrait.getTarget().getWorld().getUID().equals(terminatorTrait.getLivingEntity().getWorld().getUID())){
                     if (terminatorTrait.getLivingEntity().getLocation().distance(terminatorTrait.getTarget().getLocation()) > 200){
-                        terminatorTrait.setTeleportTimer(0);
-                        terminatorTrait.setTeleportTimer(1);
+                        terminatorTrait.teleportToAvailableSlot();
                     }
                     else {
                         terminatorTrait.setTeleportTimer((random.nextInt(30)+30)*20);
