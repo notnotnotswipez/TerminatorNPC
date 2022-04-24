@@ -53,7 +53,7 @@ public class SummonTerminatorCommand implements CommandExecutor {
 
             npc.getNavigator().getLocalParameters()
                     .attackRange(10)
-                    .baseSpeed(1.6F)
+                    .baseSpeed(1.6F * 10F)
                     .straightLineTargetingDistance(100)
                     .stuckAction(new TerminatorStuckAction())
                     .range(40);

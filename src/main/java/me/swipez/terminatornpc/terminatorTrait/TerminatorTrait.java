@@ -470,7 +470,7 @@ public class TerminatorTrait extends Trait {
     }
 
     private void lookDown(){
-        Util.assumePose(getLivingEntity(), getLivingEntity().getLocation().getYaw(), 90);
+        Util.face(getLivingEntity(), getLivingEntity().getLocation().getYaw(), 90);
     }
 
     private boolean canPlaceBlock(Location location){
@@ -614,7 +614,7 @@ public class TerminatorTrait extends Trait {
 
     private boolean attemptAttack(Player player){
         Location targetLocation = player.getLocation();
-        double attackRange = 2.5;
+        double attackRange = 2;
         double rangeAddition = getAttackRangeAddition();
         if (getLivingEntity().getLocation().distance(targetLocation) <= (attackRange+rangeAddition)){
             if (attackCooldown == 0){
