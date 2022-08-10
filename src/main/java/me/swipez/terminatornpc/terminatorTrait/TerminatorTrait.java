@@ -227,6 +227,7 @@ public class TerminatorTrait extends Trait {
                                         }
                                     }
                                 } else {
+                                    activeTarget = null;
                                     checkForNewTarget();
                                 }
                             }
@@ -573,6 +574,7 @@ public class TerminatorTrait extends Trait {
             Player player = Bukkit.getPlayer(activeTarget);
 
             if (!canTarget(player)) {
+                activeTarget = null;
                 checkForNewTarget();
             }
 
@@ -632,12 +634,17 @@ public class TerminatorTrait extends Trait {
     }
 
     private boolean attemptAttack(Player player){
+        if (!canTarget(player)) {
+            activeTarget = null;
+            return false;
+        }
+
         Location targetLocation = player.getLocation();
         double attackRange = 2;
         double rangeAddition = getAttackRangeAddition();
         if (getLivingEntity().getLocation().distance(targetLocation) <= (attackRange+rangeAddition)){
             if (attackCooldown == 0){
-                if (!shouldBeStopped && canTarget(player)){
+                if (!shouldBeStopped){
                     Util.faceLocation(npc.getEntity(), player.getLocation());
                     Block block = getBlockInFront(1).getBlock();
                     if (block.isEmpty()){
@@ -755,11 +762,16 @@ public class TerminatorTrait extends Trait {
                 }
                 isStuck = true;
                 if (!isCurrentlyPlacingUpwards && !isCurrentlyBreakingABlock && shouldJump && !shouldBeStopped){
-                    if (!getLivingEntity().getLocation().clone().add(0,2,0).getBlock().isEmpty()){
-                        if (debug){
-                            Bukkit.getLogger().log(Level.INFO, "Block is above me, breaking.");
+                    if (canTarget(getTarget())) {
+                        if (!getLivingEntity().getLocation().clone().add(0,2,0).getBlock().isEmpty()){
+                            if (debug){
+                                Bukkit.getLogger().log(Level.INFO, "Block is above me, breaking.");
+                            }
+                            scheduledBrokenBlocks.add(getLivingEntity().getLocation().clone().add(0,2,0).getBlock());
                         }
-                        scheduledBrokenBlocks.add(getLivingEntity().getLocation().clone().add(0,2,0).getBlock());
+                    } else {
+                        activeTarget = null;
+                        checkForNewTarget();
                     }
                 }
                 if (!canSee(getTarget()) && !isCurrentlyBreakingABlock && !isCurrentlyPlacingUpwards && !isCurrentlyDiggingDownwards) {
@@ -865,7 +877,13 @@ public class TerminatorTrait extends Trait {
                             TerminatorFollow followTrait = (TerminatorFollow) trait;
 
                             if (!canTarget(getTarget())) {
+                                if (followTrait.isEnabled()) {
+                                    followTrait.toggle(getTarget(), false);
+                                }
+
+                                activeTarget = null;
                                 checkForNewTarget();
+                                return;
                             }
 
                             if (!followTrait.isEnabled()){
