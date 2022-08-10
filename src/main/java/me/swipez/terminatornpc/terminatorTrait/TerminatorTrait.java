@@ -881,13 +881,18 @@ public class TerminatorTrait extends Trait {
         double smallestDistance = 1000;
         UUID closestCandidate = null;
         for (Player player : Bukkit.getOnlinePlayers()) {
-            if (player.getWorld().getUID().equals(getLivingEntity().getWorld().getUID()) && !player.getGameMode().equals(GameMode.SPECTATOR)){
-                if (getLivingEntity().getLocation().distance(player.getLocation()) < smallestDistance) {
-                    closestCandidate = player.getUniqueId();
-                    smallestDistance = getLivingEntity().getLocation().distance(player.getLocation());
-                }
+            if (!player.getWorld().getUID().equals(getLivingEntity().getWorld().getUID())
+                    || player.getGameMode().equals(GameMode.CREATIVE)
+                    || player.getGameMode().equals(GameMode.SPECTATOR)
+                    || player.isInvulnerable()
+            ) { continue; }
+
+            if (getLivingEntity().getLocation().distance(player.getLocation()) < smallestDistance) {
+                closestCandidate = player.getUniqueId();
+                smallestDistance = getLivingEntity().getLocation().distance(player.getLocation());
             }
         }
+
         if (closestCandidate != null){
             if (activeTarget != closestCandidate){
                 activeTarget = closestCandidate;
