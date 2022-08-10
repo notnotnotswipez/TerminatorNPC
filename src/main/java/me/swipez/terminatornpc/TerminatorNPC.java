@@ -1,8 +1,6 @@
 package me.swipez.terminatornpc;
 
-import me.swipez.terminatornpc.command.RemoveTerminatorsCommand;
-import me.swipez.terminatornpc.command.SummonTerminatorCommand;
-import me.swipez.terminatornpc.command.TerminatorLoadoutCommand;
+import me.swipez.terminatornpc.command.*;
 import net.citizensnpcs.api.npc.NPC;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -13,14 +11,16 @@ public final class TerminatorNPC extends JavaPlugin {
     @Override
     public void onEnable() {
         plugin = this;
-        getCommand("terminator").setExecutor(new SummonTerminatorCommand());
-        getCommand("terminatorloadout").setExecutor(new TerminatorLoadoutCommand());
-        getCommand("clearterminators").setExecutor(new RemoveTerminatorsCommand());
+        getCommand("terminator").setExecutor(new TerminatorSummon());
+        getCommand("terminatorloadout").setExecutor(new TerminatorLoadout());
+        getCommand("clearterminators").setExecutor(new TerminatorClear());
+        getCommand("terminatorignore").setExecutor(new PlayerIgnore());
+        getCommand("terminatorunignore").setExecutor(new PlayerUnignore());
     }
 
     @Override
     public void onDisable() {
-       for (NPC npc : SummonTerminatorCommand.terminators){
+       for (NPC npc : TerminatorSummon.terminators){
            npc.despawn();
        }
     }

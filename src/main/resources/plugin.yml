@@ -2,7 +2,7 @@ name: TerminatorNPC
 version: ${project.version}
 main: me.swipez.terminatornpc.TerminatorNPC
 api-version: 1.18
-authors: [ notnotnotswipez ]
+authors: [ notnotnotswipez, Daxanius ]
 depend: [Citizens]
 commands:
   terminator:
@@ -11,3 +11,7 @@ commands:
     usage: /clearterminators
   terminatorloadout:
     usage: /terminatorloadout
+  terminatorignore:
+    usage: /terminatorignore <playername>
+  terminatorunignore:
+    usage: /terminatorunignore <playername>

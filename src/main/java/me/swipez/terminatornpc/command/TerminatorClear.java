@@ -8,19 +8,19 @@ import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
-public class RemoveTerminatorsCommand implements CommandExecutor {
+public class TerminatorClear implements CommandExecutor {
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
         if (sender instanceof Player){
             if (sender.hasPermission("terminatornpc.deleteterminator")) {
                 Player player = (Player) sender;
-                player.sendMessage(ChatColor.WHITE + "Cleared " + ChatColor.RED + SummonTerminatorCommand.terminators.size() + ChatColor.WHITE + " Terminators.");
-                for (NPC npc : SummonTerminatorCommand.terminators) {
+                player.sendMessage(ChatColor.WHITE + "Cleared " + ChatColor.RED + TerminatorSummon.terminators.size() + ChatColor.WHITE + " Terminators.");
+                for (NPC npc : TerminatorSummon.terminators) {
                     TerminatorTrait terminatorTrait = npc.getOrAddTrait(TerminatorTrait.class);
                     terminatorTrait.delete = true;
                     npc.despawn();
                 }
-                SummonTerminatorCommand.terminators.clear();
+                TerminatorSummon.terminators.clear();
             }
         }
         return true;
