@@ -26,8 +26,14 @@ public class PlayerIgnore implements CommandExecutor {
                     return true;
                 }
 
+                if (ignoredPlayers.contains(ignoredPlayer.getUniqueId())) {
+                    ignoredPlayers.remove(ignoredPlayer.getUniqueId());
+                    player.sendMessage(ChatColor.WHITE + "Terminators will no longer ignore " + ChatColor.RED + args[0] + ChatColor.WHITE + ".");
+                    return true;
+                }
+
                 ignoredPlayers.add(ignoredPlayer.getUniqueId());
-                player.sendMessage(ChatColor.WHITE + "Terminators will now ignore " + ChatColor.RED + ignoredPlayer.getDisplayName() + ChatColor.WHITE + " Terminators.");
+                player.sendMessage(ChatColor.WHITE + "Terminators will now ignore " + ChatColor.RED + ignoredPlayer.getDisplayName() + ChatColor.WHITE + ".");
             }
         }
         return true;

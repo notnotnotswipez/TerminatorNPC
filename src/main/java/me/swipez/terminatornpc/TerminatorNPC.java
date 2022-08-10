@@ -15,7 +15,6 @@ public final class TerminatorNPC extends JavaPlugin {
         getCommand("terminatorloadout").setExecutor(new TerminatorLoadout());
         getCommand("clearterminators").setExecutor(new TerminatorClear());
         getCommand("terminatorignore").setExecutor(new PlayerIgnore());
-        getCommand("terminatorunignore").setExecutor(new PlayerUnignore());
     }
 
     @Override

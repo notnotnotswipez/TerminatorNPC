@@ -146,6 +146,14 @@ public class TerminatorTrait extends Trait {
         return false;
     }
 
+    public boolean canTarget(Player player) {
+        return !(!player.getWorld().getUID().equals(getLivingEntity().getWorld().getUID())
+                || player.getGameMode().equals(GameMode.CREATIVE)
+                || player.getGameMode().equals(GameMode.SPECTATOR)
+                || player.isInvulnerable()
+                || PlayerIgnore.ignoredPlayers.contains(player.getUniqueId()));
+    }
+
     int blockBreakTimeout = 0;
 
 
@@ -559,9 +567,15 @@ public class TerminatorTrait extends Trait {
         isInWater = getLivingEntity().getLocation().getBlock().getType().equals(Material.WATER);
         if (activeTarget != null){
             Player player = Bukkit.getPlayer(activeTarget);
+
+            if (!canTarget(player)) {
+                checkForNewTarget();
+            }
+
             if (!shouldBeStopped){
                 attemptAttack(player);
             }
+
             hasLineOfSight = canSee(getTarget());
             if (isCurrentlyBreakingABlock && blockCurrentlyBeingBroken != null){
                 if (isFarFromChosenBlock()){
@@ -619,7 +633,7 @@ public class TerminatorTrait extends Trait {
         double rangeAddition = getAttackRangeAddition();
         if (getLivingEntity().getLocation().distance(targetLocation) <= (attackRange+rangeAddition)){
             if (attackCooldown == 0){
-                if (!shouldBeStopped){
+                if (!shouldBeStopped && canTarget(player)){
                     Util.faceLocation(npc.getEntity(), player.getLocation());
                     Block block = getBlockInFront(1).getBlock();
                     if (block.isEmpty()){
@@ -845,6 +859,11 @@ public class TerminatorTrait extends Trait {
                     for (Trait trait : npc.getTraits()){
                         if (trait instanceof TerminatorFollow){
                             TerminatorFollow followTrait = (TerminatorFollow) trait;
+
+                            if (!canTarget(getTarget())) {
+                                checkForNewTarget();
+                            }
+
                             if (!followTrait.isEnabled()){
                                 followTrait.toggle(getTarget(), false);
                             }
@@ -882,12 +901,7 @@ public class TerminatorTrait extends Trait {
         double smallestDistance = 1000;
         UUID closestCandidate = null;
         for (Player player : Bukkit.getOnlinePlayers()) {
-            if (!player.getWorld().getUID().equals(getLivingEntity().getWorld().getUID())
-                    || player.getGameMode().equals(GameMode.CREATIVE)
-                    || player.getGameMode().equals(GameMode.SPECTATOR)
-                    || player.isInvulnerable()
-                    || PlayerIgnore.ignoredPlayers.contains(player.getUniqueId())
-            ) { continue; }
+            if (!canTarget(player)) { continue; }
 
             if (getLivingEntity().getLocation().distance(player.getLocation()) < smallestDistance) {
                 closestCandidate = player.getUniqueId();

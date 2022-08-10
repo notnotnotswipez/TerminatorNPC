@@ -13,5 +13,3 @@ commands:
     usage: /terminatorloadout
   terminatorignore:
     usage: /terminatorignore <playername>
-  terminatorunignore:
-    usage: /terminatorunignore <playername>
