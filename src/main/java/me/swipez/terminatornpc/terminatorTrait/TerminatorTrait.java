@@ -207,23 +207,27 @@ public class TerminatorTrait extends Trait {
                                 ((Player) getLivingEntity()).setSprinting(false);
                             }
                             if (!shouldBeStopped) {
-                                if (blockPlaceCooldown == 0){
-                                    if (distanceToGround(4) && !isInWater) {
-                                        placeBlockUnderFeet(terminatorLoadout.getBlockMaterial());
+                                if (canTarget(getTarget())) {
+                                    if (blockPlaceCooldown == 0){
+                                        if (distanceToGround(4) && !isInWater) {
+                                            placeBlockUnderFeet(terminatorLoadout.getBlockMaterial());
+                                        }
+                                        if (getLivingEntity().getLocation().clone().subtract(0,1,0).getBlock().getType().equals(Material.WATER) && !isFullSwimming){
+                                            placeBlockUnderFeet(terminatorLoadout.getBlockMaterial());
+                                        }
                                     }
-                                    if (getLivingEntity().getLocation().clone().subtract(0,1,0).getBlock().getType().equals(Material.WATER) && !isFullSwimming){
-                                        placeBlockUnderFeet(terminatorLoadout.getBlockMaterial());
+                                    if (getLivingEntity().getLocation().clone().subtract(0,1,0).getBlock().getType().equals(Material.LAVA)){
+                                        if (boatClutchCooldown == 0){
+                                            setMainHandItem(new ItemStack(Material.OAK_BOAT));
+                                            PlayerAnimation.ARM_SWING.play((Player) getLivingEntity());
+                                            getLivingEntity().getWorld().spawnEntity(getLivingEntity().getLocation().clone().subtract(0,0.9,0), EntityType.BOAT);
+                                            tryJump(0.7, true);
+                                            boatClutchCooldown = 10;
+                                            lookDown();
+                                        }
                                     }
-                                }
-                                if (getLivingEntity().getLocation().clone().subtract(0,1,0).getBlock().getType().equals(Material.LAVA)){
-                                    if (boatClutchCooldown == 0){
-                                        setMainHandItem(new ItemStack(Material.OAK_BOAT));
-                                        PlayerAnimation.ARM_SWING.play((Player) getLivingEntity());
-                                        getLivingEntity().getWorld().spawnEntity(getLivingEntity().getLocation().clone().subtract(0,0.9,0), EntityType.BOAT);
-                                        tryJump(0.7, true);
-                                        boatClutchCooldown = 10;
-                                        lookDown();
-                                    }
+                                } else {
+                                    checkForNewTarget();
                                 }
                             }
                             if (!scheduledBrokenBlocks.isEmpty()) {
