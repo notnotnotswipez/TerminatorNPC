@@ -6,7 +6,7 @@
 
     <groupId>me.swipez</groupId>
     <artifactId>TerminatorNPC</artifactId>
-    <version>1.3-SNAPSHOT</version>
+    <version>1.3-QuestalReborn</version>
     <packaging>jar</packaging>
 
     <name>TerminatorNPC</name>
