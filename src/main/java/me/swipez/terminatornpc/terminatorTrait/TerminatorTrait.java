@@ -147,8 +147,7 @@ public class TerminatorTrait extends Trait {
     }
 
     public boolean canTarget(Player player) {
-        return !(!player.getWorld().getUID().equals(getLivingEntity().getWorld().getUID())
-                || player.getGameMode().equals(GameMode.CREATIVE)
+        return !(player.getGameMode().equals(GameMode.CREATIVE)
                 || player.getGameMode().equals(GameMode.SPECTATOR)
                 || player.isInvulnerable()
                 || PlayerIgnore.ignoredPlayers.contains(player.getUniqueId()));
@@ -923,7 +922,7 @@ public class TerminatorTrait extends Trait {
         double smallestDistance = 1000;
         UUID closestCandidate = null;
         for (Player player : Bukkit.getOnlinePlayers()) {
-            if (!canTarget(player)) { continue; }
+            if (!canTarget(player) || !player.getWorld().getUID().equals(getLivingEntity().getWorld().getUID())) { continue; }
 
             if (getLivingEntity().getLocation().distance(player.getLocation()) < smallestDistance) {
                 closestCandidate = player.getUniqueId();
