@@ -6,10 +6,21 @@ authors: [ notnotnotswipez, Daxanius ]
 depend: [Citizens]
 commands:
   terminator:
-    usage: /terminator <playername> <number of bots>
-  clearterminators:
-    usage: /clearterminators
-  terminatorloadout:
-    usage: /terminatorloadout
-  terminatorignore:
-    usage: /terminatorignore <playername>
+    usage: /terminator <subcommand>
+    description: Basic commands for all terminator-related things
+    permission: terminatornpc.help
+permissions:
+  terminatornpc.help: { default: op }
+  terminatornpc.ignore: { default: op }
+  terminatornpc.spawnterminator: { default: op }
+  terminatornpc.deleteterminator: { default: op }
+  terminatornpc.loadout: { default: op }
+
+  terminatornpc.*:
+    default: op
+    children:
+      terminatornpc.help: true
+      terminatornpc.ignore: true
+      terminatornpc.spawnterminator: true
+      terminatornpc.deleteterminator: true
+      terminatornpc.loadout: true

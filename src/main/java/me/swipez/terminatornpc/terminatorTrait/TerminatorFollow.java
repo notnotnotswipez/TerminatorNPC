@@ -1,7 +1,6 @@
 package me.swipez.terminatornpc.terminatorTrait;
 
-import
-me.swipez.terminatornpc.command.PlayerIgnore;
+import me.swipez.terminatornpc.TerminatorNPC;
 import net.citizensnpcs.api.ai.flocking.Flocker;
 import net.citizensnpcs.api.ai.flocking.RadiusNPCFlock;
 import net.citizensnpcs.api.ai.flocking.SeparationBehavior;
@@ -32,7 +31,7 @@ public class TerminatorFollow extends Trait {
         return !(player.getGameMode().equals(GameMode.CREATIVE)
                 || player.getGameMode().equals(GameMode.SPECTATOR)
                 || player.isInvulnerable()
-                || PlayerIgnore.ignoredPlayers.contains(player.getUniqueId()));
+                || TerminatorNPC.ignoredPlayers.contains(player.getUniqueId()));
     }
 
     public TerminatorFollow() {

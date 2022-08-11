@@ -1,7 +1,6 @@
 package me.swipez.terminatornpc.terminatorTrait;
 
 import me.swipez.terminatornpc.TerminatorNPC;
-import me.swipez.terminatornpc.command.PlayerIgnore;
 import me.swipez.terminatornpc.helper.TerminatorUtils;
 import me.swipez.terminatornpc.loadout.ArmorItemValues;
 import me.swipez.terminatornpc.loadout.AttackItemValues;
@@ -150,7 +149,7 @@ public class TerminatorTrait extends Trait {
         return !(player.getGameMode().equals(GameMode.CREATIVE)
                 || player.getGameMode().equals(GameMode.SPECTATOR)
                 || player.isInvulnerable()
-                || PlayerIgnore.ignoredPlayers.contains(player.getUniqueId()));
+                || TerminatorNPC.ignoredPlayers.contains(player.getUniqueId()));
     }
 
     int blockBreakTimeout = 0;
