@@ -15,8 +15,7 @@ import org.bukkit.util.Vector;
 import java.util.ArrayList;
 import java.util.Collection;
 
-public class Raycast
-{
+public class Raycast  {
     private final double divider = 100.0;
     private ArrayList<Material> passthroughMaterials;
     private final ArrayList<Location> testedLocations;

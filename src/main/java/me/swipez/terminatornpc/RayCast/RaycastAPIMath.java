@@ -3,8 +3,7 @@ package me.swipez.terminatornpc.RayCast;
 
 import org.bukkit.util.Vector;
 
-public class RaycastAPIMath
-{
+public class RaycastAPIMath {
     public static double cos(final double a) {
         return Math.cos(a);
     }

@@ -9,7 +9,6 @@ import net.citizensnpcs.api.trait.Trait;
 import java.util.Random;
 
 public class TerminatorStuckAction implements StuckAction {
-
     Random random = new Random();
 
     @Override

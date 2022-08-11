@@ -6,7 +6,6 @@ import org.bukkit.util.Vector;
 import static org.bukkit.Location.normalizeYaw;
 
 public class TerminatorUtils {
-
     // More ripped code LOL. Dont worry theres original code in this plugin you just need to look really hard but trust me
     // You'll find it.
 

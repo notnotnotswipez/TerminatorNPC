@@ -1,6 +1,7 @@
 package me.swipez.terminatornpc.terminatorTrait;
 
-import me.swipez.terminatornpc.command.PlayerIgnore;
+import
+me.swipez.terminatornpc.command.PlayerIgnore;
 import net.citizensnpcs.api.ai.flocking.Flocker;
 import net.citizensnpcs.api.ai.flocking.RadiusNPCFlock;
 import net.citizensnpcs.api.ai.flocking.SeparationBehavior;

@@ -5,7 +5,6 @@ import net.citizensnpcs.api.npc.NPC;
 import org.bukkit.plugin.java.JavaPlugin;
 
 public final class TerminatorNPC extends JavaPlugin {
-
     private static TerminatorNPC plugin;
 
     @Override
