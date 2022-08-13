@@ -138,6 +138,11 @@ public class TerminatorCommands {
             @Override
             public void run() {
                 summoner.summon();
+
+                // Send a message to all players announcing that a new terminator has been summoned
+                Bukkit.getOnlinePlayers().forEach(
+                        p -> p.sendMessage(ChatColor.GOLD + "A new " + ChatColor.RESET + summoner.getName() + ChatColor.GOLD + " has been spawned!")
+                );
             }
         }, 0, args.getInteger(2));
 
