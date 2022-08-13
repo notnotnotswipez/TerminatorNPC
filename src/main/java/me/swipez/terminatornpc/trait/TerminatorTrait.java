@@ -918,20 +918,22 @@ public class TerminatorTrait extends Trait {
     }
 
     private void checkForNewTarget() {
-        double smallestDistance = 1000;
-        UUID closestCandidate = null;
+        double nearestDistance = 0;
+        UUID nearestCandidate = null;
+
         for (Player player : Bukkit.getOnlinePlayers()) {
             if (!canTarget(player) || !player.getWorld().getUID().equals(getLivingEntity().getWorld().getUID())) { continue; }
 
-            if (getLivingEntity().getLocation().distance(player.getLocation()) < smallestDistance) {
-                closestCandidate = player.getUniqueId();
-                smallestDistance = getLivingEntity().getLocation().distance(player.getLocation());
+            double distance = getLivingEntity().getLocation().distance(player.getLocation());
+            if (nearestCandidate == null || distance < nearestDistance) {
+                nearestDistance = distance;
+                nearestCandidate = player.getUniqueId();
             }
         }
 
-        if (closestCandidate != null){
-            if (activeTarget != closestCandidate){
-                activeTarget = closestCandidate;
+        if (nearestCandidate != null){
+            if (activeTarget != nearestCandidate){
+                activeTarget = nearestCandidate;
                 setNewTarget(getTarget());
             }
         }
