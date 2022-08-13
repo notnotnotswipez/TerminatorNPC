@@ -2,7 +2,7 @@
 // Decompiled by Procyon v0.5.36
 // 
 
-package me.swipez.terminatornpc.RayCast;
+package me.swipez.terminatornpc.util;
 
 import org.bukkit.Location;
 import org.bukkit.Material;

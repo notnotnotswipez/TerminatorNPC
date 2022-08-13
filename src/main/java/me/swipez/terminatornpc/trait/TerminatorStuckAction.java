@@ -1,6 +1,5 @@
-package me.swipez.terminatornpc.stuckaction;
+package me.swipez.terminatornpc.trait;
 
-import me.swipez.terminatornpc.terminatorTrait.TerminatorTrait;
 import net.citizensnpcs.api.ai.Navigator;
 import net.citizensnpcs.api.ai.StuckAction;
 import net.citizensnpcs.api.npc.NPC;

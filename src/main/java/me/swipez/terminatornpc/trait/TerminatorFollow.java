@@ -1,4 +1,4 @@
-package me.swipez.terminatornpc.terminatorTrait;
+package me.swipez.terminatornpc.trait;
 
 import me.swipez.terminatornpc.TerminatorNPC;
 import net.citizensnpcs.api.ai.flocking.Flocker;

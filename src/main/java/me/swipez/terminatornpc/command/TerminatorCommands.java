@@ -1,25 +1,17 @@
 package me.swipez.terminatornpc.command;
 
 import me.swipez.terminatornpc.TerminatorNPC;
-import me.swipez.terminatornpc.stuckaction.TerminatorStuckAction;
-import me.swipez.terminatornpc.terminatorTrait.TerminatorFollow;
-import me.swipez.terminatornpc.terminatorTrait.TerminatorTrait;
-import net.citizensnpcs.api.CitizensAPI;
+import me.swipez.terminatornpc.trait.TerminatorTrait;
+import me.swipez.terminatornpc.util.TerminatorSummoner;
 import net.citizensnpcs.api.command.Command;
 import net.citizensnpcs.api.command.CommandContext;
 import net.citizensnpcs.api.command.Requirements;
 import net.citizensnpcs.api.npc.NPC;
-import net.citizensnpcs.npc.CitizensNPC;
-import net.citizensnpcs.npc.EntityControllers;
-import net.citizensnpcs.trait.SkinTrait;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.command.CommandException;
 import org.bukkit.command.CommandSender;
-import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
-
-import java.util.UUID;
 
 @Requirements(ownership = false, selected = false)
 public class TerminatorCommands {
@@ -88,12 +80,13 @@ public class TerminatorCommands {
             return;
         }
 
-        int number = 1;
+        int amount = 1;
         if (args.length() == 4){
-            number = args.getInteger(2);
+            amount = args.getInteger(2);
         }
 
-        summonTerminator(args.getString(1), number, (Player) sender);
+        TerminatorSummoner summoner = new TerminatorSummoner(args.getString(1), (Player) sender, ((Player) sender).getLocation(), amount);
+        summoner.summon();
         sender.sendMessage("Summoned terminator(s) with name " + ChatColor.RED + args.getString(1) + ChatColor.RESET + ".");
     }
 
@@ -119,37 +112,66 @@ public class TerminatorCommands {
         TerminatorNPC.terminators.clear();
     }
 
-    private static void summonTerminator(String playerName, int number, Player sender){
-        TerminatorNPC.terminatorLoadoutHashMap.putIfAbsent(sender.getUniqueId(), new me.swipez.terminatornpc.loadout.TerminatorLoadout(TerminatorNPC.getPlugin()));
-        me.swipez.terminatornpc.loadout.TerminatorLoadout terminatorLoadout = TerminatorNPC.terminatorLoadoutHashMap.get(sender.getUniqueId());
-
-        for (int i = 0; i < number; i++){
-            NPC npc = new CitizensNPC(UUID.randomUUID(), TerminatorNPC.getUniqueID(), playerName, EntityControllers.createForType(EntityType.PLAYER), CitizensAPI.getNPCRegistry());
-            npc.spawn(sender.getLocation());
-            npc.data().set(NPC.DEFAULT_PROTECTED_METADATA, false);
-
-            npc.getNavigator().getLocalParameters()
-                    .attackRange(10)
-                    .baseSpeed(1.6F * 10F)
-                    .straightLineTargetingDistance(100)
-                    .stuckAction(new TerminatorStuckAction())
-                    .range(40);
-
-            TerminatorFollow followTrait = new TerminatorFollow();
-            followTrait.linkToNPC(npc);
-            followTrait.run();
-            followTrait.toggle(sender, false);
-
-            npc.addTrait(followTrait);
-
-            TerminatorTrait terminatorTrait = new TerminatorTrait(npc, terminatorLoadout.clone());
-
-            npc.addTrait(terminatorTrait);
-
-            SkinTrait skinTrait = npc.getOrAddTrait(SkinTrait.class);
-            skinTrait.setSkinName(playerName);
-
-            TerminatorNPC.terminators.add(npc);
+    @Command(
+            aliases = { "terminator" },
+            usage = "summoner [player] [ticks] (amount)",
+            desc = "Create a terminator summoner at your location",
+            modifiers = { "summoner" },
+            min = 3,
+            max = 4,
+            permission = "terminatornpc.spawnterminator"
+    )
+    public void addSummoner(CommandContext args, CommandSender sender, NPC npc) throws CommandException {
+        if (!(sender instanceof Player)) {
+            sender.sendMessage(ChatColor.RED + "You must be a player to use this command!");
+            return;
         }
+
+        int amount = 1;
+        if (args.length() == 5){
+            amount = args.getInteger(3);
+        }
+
+        // Register the task that will summon a new terminator every x ticks
+        TerminatorSummoner summoner = new TerminatorSummoner(args.getString(1), (Player) sender, ((Player) sender).getLocation(), amount);
+        int summonerId = Bukkit.getScheduler().scheduleSyncRepeatingTask(TerminatorNPC.getPlugin(), new Runnable() {
+            @Override
+            public void run() {
+                summoner.summon();
+            }
+        }, 0, args.getInteger(2));
+
+        sender.sendMessage("Created summoner with id "
+                + ChatColor.RED + TerminatorNPC.bukkitSchedules.size() + ChatColor.RESET + " at location "
+                + ChatColor.RED + ((Player) sender).getLocation().getBlockX()
+                + " " + ((Player) sender).getLocation().getBlockY()
+                + " " + ((Player) sender).getLocation().getBlockZ() + ChatColor.RESET + ".");
+
+        TerminatorNPC.bukkitSchedules.add(summonerId);
+    }
+
+    @Command(
+            aliases = { "terminator" },
+            usage = "delsum [id]",
+            desc = "Remove a terminator summoner",
+            modifiers = { "delsum" },
+            min = 2,
+            max = 2,
+            permission = "terminatornpc.spawnterminator"
+    )
+    public void removeSummoner(CommandContext args, CommandSender sender, NPC npc) throws CommandException {
+        int index = args.getInteger(1);
+
+        if (index > TerminatorNPC.bukkitSchedules.size() -1) {
+            sender.sendMessage(ChatColor.RED + "Summoner with id " + index + " not found!");
+            return;
+        }
+
+        int task = TerminatorNPC.bukkitSchedules.get(index);
+        Bukkit.getScheduler().cancelTask(task);
+
+        TerminatorNPC.bukkitSchedules.remove(index);
+
+        sender.sendMessage("Removed summoner with id " + ChatColor.RED + index + ChatColor.RESET + ".");
     }
 }

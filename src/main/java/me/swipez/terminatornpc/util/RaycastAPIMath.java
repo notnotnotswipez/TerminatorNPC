@@ -1,5 +1,5 @@
 
-package me.swipez.terminatornpc.RayCast;
+package me.swipez.terminatornpc.util;
 
 import org.bukkit.util.Vector;
 

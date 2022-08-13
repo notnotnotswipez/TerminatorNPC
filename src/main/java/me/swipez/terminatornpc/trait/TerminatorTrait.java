@@ -1,7 +1,7 @@
-package me.swipez.terminatornpc.terminatorTrait;
+package me.swipez.terminatornpc.trait;
 
 import me.swipez.terminatornpc.TerminatorNPC;
-import me.swipez.terminatornpc.helper.TerminatorUtils;
+import me.swipez.terminatornpc.util.TerminatorUtils;
 import me.swipez.terminatornpc.loadout.ArmorItemValues;
 import me.swipez.terminatornpc.loadout.AttackItemValues;
 import me.swipez.terminatornpc.loadout.TerminatorLoadout;
