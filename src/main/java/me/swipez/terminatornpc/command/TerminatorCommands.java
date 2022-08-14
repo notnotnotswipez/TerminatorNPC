@@ -144,7 +144,7 @@ public class TerminatorCommands {
                         p -> p.sendMessage(ChatColor.GOLD + "A new " + ChatColor.RESET + summoner.getName() + ChatColor.GOLD + " has been spawned!")
                 );
             }
-        }, 0, args.getInteger(2));
+        }, args.getInteger(2), args.getInteger(2));
 
         sender.sendMessage("Created summoner with id "
                 + ChatColor.RED + TerminatorNPC.bukkitSchedules.size() + ChatColor.RESET + " at location "
