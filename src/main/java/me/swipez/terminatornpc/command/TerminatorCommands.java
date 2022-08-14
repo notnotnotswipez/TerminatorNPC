@@ -67,7 +67,7 @@ public class TerminatorCommands {
 
     @Command(
             aliases = { "terminator" },
-            usage = "add [player] (count)",
+            usage = "add [playername] (count)",
             desc = "Summon terminator(s)",
             modifiers = { "add" },
             min = 2,
@@ -114,7 +114,7 @@ public class TerminatorCommands {
 
     @Command(
             aliases = { "terminator" },
-            usage = "summoner [player] [ticks] (amount)",
+            usage = "summoner [playername] [seconds] (amount)",
             desc = "Create a terminator summoner at your location",
             modifiers = { "summoner" },
             min = 3,
@@ -132,6 +132,8 @@ public class TerminatorCommands {
             amount = args.getInteger(3);
         }
 
+        int timer = (int) Math.ceil(args.getDouble(2) * 20);
+
         // Register the task that will summon a new terminator every x ticks
         TerminatorSummoner summoner = new TerminatorSummoner(args.getString(1), (Player) sender, ((Player) sender).getLocation(), amount);
         int summonerId = Bukkit.getScheduler().scheduleSyncRepeatingTask(TerminatorNPC.getPlugin(), new Runnable() {
@@ -144,7 +146,7 @@ public class TerminatorCommands {
                         p -> p.sendMessage(ChatColor.GOLD + "A new " + ChatColor.RESET + summoner.getName() + ChatColor.GOLD + " has been spawned!")
                 );
             }
-        }, args.getInteger(2), args.getInteger(2));
+        }, timer, timer);
 
         int id = TerminatorNPC.getUniqueID();
         sender.sendMessage("Created summoner with id "
@@ -158,9 +160,9 @@ public class TerminatorCommands {
 
     @Command(
             aliases = { "terminator" },
-            usage = "delsum [id]",
+            usage = "removesummoner [id]",
             desc = "Remove a terminator summoner",
-            modifiers = { "delsum" },
+            modifiers = { "removesummoner" },
             min = 2,
             max = 2,
             permission = "terminatornpc.spawnterminator"
