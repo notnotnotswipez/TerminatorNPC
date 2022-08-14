@@ -2,23 +2,17 @@ package me.swipez.terminatornpc;
 
 import me.swipez.terminatornpc.command.*;
 import me.swipez.terminatornpc.loadout.TerminatorLoadout;
-import me.swipez.terminatornpc.util.TerminatorSummoner;;
 import net.citizensnpcs.api.command.CommandManager;
 import net.citizensnpcs.api.command.Injector;
 import net.citizensnpcs.api.npc.NPC;
 import net.citizensnpcs.api.util.Messaging;
 import net.citizensnpcs.util.Messages;
 import net.citizensnpcs.util.StringHelper;
-import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.plugin.java.JavaPlugin;
-import org.bukkit.scheduler.BukkitScheduler;
 
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 
 public final class TerminatorNPC extends JavaPlugin {
     private final CommandManager commands = new CommandManager();
@@ -30,7 +24,7 @@ public final class TerminatorNPC extends JavaPlugin {
     public static List<NPC> terminators = new LinkedList<>();
 
     // All locations a terminator should be automatically summoned at
-    public static List<Integer> bukkitSchedules = new LinkedList<>();
+    public static Dictionary<Integer, Integer> bukkitSchedules = new Hashtable<>();
 
     private static int currentID = 0;
 

@@ -146,13 +146,14 @@ public class TerminatorCommands {
             }
         }, args.getInteger(2), args.getInteger(2));
 
+        int id = TerminatorNPC.getUniqueID();
         sender.sendMessage("Created summoner with id "
-                + ChatColor.RED + TerminatorNPC.bukkitSchedules.size() + ChatColor.RESET + " at location "
+                + ChatColor.RED + id + ChatColor.RESET + " at location "
                 + ChatColor.RED + ((Player) sender).getLocation().getBlockX()
                 + " " + ((Player) sender).getLocation().getBlockY()
                 + " " + ((Player) sender).getLocation().getBlockZ() + ChatColor.RESET + ".");
 
-        TerminatorNPC.bukkitSchedules.add(summonerId);
+        TerminatorNPC.bukkitSchedules.put(id, summonerId);
     }
 
     @Command(
@@ -167,14 +168,13 @@ public class TerminatorCommands {
     public void removeSummoner(CommandContext args, CommandSender sender, NPC npc) throws CommandException {
         int index = args.getInteger(1);
 
-        if (index > TerminatorNPC.bukkitSchedules.size() -1) {
+        if (TerminatorNPC.bukkitSchedules.get(index) == null) {
             sender.sendMessage(ChatColor.RED + "Summoner with id " + index + " not found!");
             return;
         }
 
         int task = TerminatorNPC.bukkitSchedules.get(index);
         Bukkit.getScheduler().cancelTask(task);
-
         TerminatorNPC.bukkitSchedules.remove(index);
 
         sender.sendMessage("Removed summoner with id " + ChatColor.RED + index + ChatColor.RESET + ".");
