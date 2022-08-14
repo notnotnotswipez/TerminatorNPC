@@ -1,7 +1,7 @@
-package me.swipez.terminatornpc.terminatorTrait;
+package me.swipez.terminatornpc.trait;
 
 import me.swipez.terminatornpc.TerminatorNPC;
-import me.swipez.terminatornpc.helper.TerminatorUtils;
+import me.swipez.terminatornpc.util.TerminatorUtils;
 import me.swipez.terminatornpc.loadout.ArmorItemValues;
 import me.swipez.terminatornpc.loadout.AttackItemValues;
 import me.swipez.terminatornpc.loadout.TerminatorLoadout;
@@ -145,6 +145,13 @@ public class TerminatorTrait extends Trait {
         return false;
     }
 
+    public boolean canTarget(Player player) {
+        return !(player.getGameMode().equals(GameMode.CREATIVE)
+                || player.getGameMode().equals(GameMode.SPECTATOR)
+                || player.isInvulnerable()
+                || TerminatorNPC.ignoredPlayers.contains(player.getUniqueId()));
+    }
+
     int blockBreakTimeout = 0;
 
 
@@ -198,23 +205,28 @@ public class TerminatorTrait extends Trait {
                                 ((Player) getLivingEntity()).setSprinting(false);
                             }
                             if (!shouldBeStopped) {
-                                if (blockPlaceCooldown == 0){
-                                    if (distanceToGround(4) && !isInWater) {
-                                        placeBlockUnderFeet(terminatorLoadout.getBlockMaterial());
+                                if (canTarget(getTarget())) {
+                                    if (blockPlaceCooldown == 0){
+                                        if (distanceToGround(4) && !isInWater) {
+                                            placeBlockUnderFeet(terminatorLoadout.getBlockMaterial());
+                                        }
+                                        if (getLivingEntity().getLocation().clone().subtract(0,1,0).getBlock().getType().equals(Material.WATER) && !isFullSwimming){
+                                            placeBlockUnderFeet(terminatorLoadout.getBlockMaterial());
+                                        }
                                     }
-                                    if (getLivingEntity().getLocation().clone().subtract(0,1,0).getBlock().getType().equals(Material.WATER) && !isFullSwimming){
-                                        placeBlockUnderFeet(terminatorLoadout.getBlockMaterial());
+                                    if (getLivingEntity().getLocation().clone().subtract(0,1,0).getBlock().getType().equals(Material.LAVA)){
+                                        if (boatClutchCooldown == 0){
+                                            setMainHandItem(new ItemStack(Material.OAK_BOAT));
+                                            PlayerAnimation.ARM_SWING.play((Player) getLivingEntity());
+                                            getLivingEntity().getWorld().spawnEntity(getLivingEntity().getLocation().clone().subtract(0,0.9,0), EntityType.BOAT);
+                                            tryJump(0.7, true);
+                                            boatClutchCooldown = 10;
+                                            lookDown();
+                                        }
                                     }
-                                }
-                                if (getLivingEntity().getLocation().clone().subtract(0,1,0).getBlock().getType().equals(Material.LAVA)){
-                                    if (boatClutchCooldown == 0){
-                                        setMainHandItem(new ItemStack(Material.OAK_BOAT));
-                                        PlayerAnimation.ARM_SWING.play((Player) getLivingEntity());
-                                        getLivingEntity().getWorld().spawnEntity(getLivingEntity().getLocation().clone().subtract(0,0.9,0), EntityType.BOAT);
-                                        tryJump(0.7, true);
-                                        boatClutchCooldown = 10;
-                                        lookDown();
-                                    }
+                                } else {
+                                    activeTarget = null;
+                                    checkForNewTarget();
                                 }
                             }
                             if (!scheduledBrokenBlocks.isEmpty()) {
@@ -558,9 +570,16 @@ public class TerminatorTrait extends Trait {
         isInWater = getLivingEntity().getLocation().getBlock().getType().equals(Material.WATER);
         if (activeTarget != null){
             Player player = Bukkit.getPlayer(activeTarget);
+
+            if (!canTarget(player)) {
+                activeTarget = null;
+                checkForNewTarget();
+            }
+
             if (!shouldBeStopped){
                 attemptAttack(player);
             }
+
             hasLineOfSight = canSee(getTarget());
             if (isCurrentlyBreakingABlock && blockCurrentlyBeingBroken != null){
                 if (isFarFromChosenBlock()){
@@ -613,6 +632,11 @@ public class TerminatorTrait extends Trait {
     }
 
     private boolean attemptAttack(Player player){
+        if (!canTarget(player)) {
+            activeTarget = null;
+            return false;
+        }
+
         Location targetLocation = player.getLocation();
         double attackRange = 2;
         double rangeAddition = getAttackRangeAddition();
@@ -736,11 +760,16 @@ public class TerminatorTrait extends Trait {
                 }
                 isStuck = true;
                 if (!isCurrentlyPlacingUpwards && !isCurrentlyBreakingABlock && shouldJump && !shouldBeStopped){
-                    if (!getLivingEntity().getLocation().clone().add(0,2,0).getBlock().isEmpty()){
-                        if (debug){
-                            Bukkit.getLogger().log(Level.INFO, "Block is above me, breaking.");
+                    if (canTarget(getTarget())) {
+                        if (!getLivingEntity().getLocation().clone().add(0,2,0).getBlock().isEmpty()){
+                            if (debug){
+                                Bukkit.getLogger().log(Level.INFO, "Block is above me, breaking.");
+                            }
+                            scheduledBrokenBlocks.add(getLivingEntity().getLocation().clone().add(0,2,0).getBlock());
                         }
-                        scheduledBrokenBlocks.add(getLivingEntity().getLocation().clone().add(0,2,0).getBlock());
+                    } else {
+                        activeTarget = null;
+                        checkForNewTarget();
                     }
                 }
                 if (!canSee(getTarget()) && !isCurrentlyBreakingABlock && !isCurrentlyPlacingUpwards && !isCurrentlyDiggingDownwards) {
@@ -844,6 +873,17 @@ public class TerminatorTrait extends Trait {
                     for (Trait trait : npc.getTraits()){
                         if (trait instanceof TerminatorFollow){
                             TerminatorFollow followTrait = (TerminatorFollow) trait;
+
+                            if (!canTarget(getTarget())) {
+                                if (followTrait.isEnabled()) {
+                                    followTrait.toggle(getTarget(), false);
+                                }
+
+                                activeTarget = null;
+                                checkForNewTarget();
+                                return;
+                            }
+
                             if (!followTrait.isEnabled()){
                                 followTrait.toggle(getTarget(), false);
                             }
@@ -878,19 +918,22 @@ public class TerminatorTrait extends Trait {
     }
 
     private void checkForNewTarget() {
-        double smallestDistance = 1000;
-        UUID closestCandidate = null;
+        double nearestDistance = 0;
+        UUID nearestCandidate = null;
+
         for (Player player : Bukkit.getOnlinePlayers()) {
-            if (player.getWorld().getUID().equals(getLivingEntity().getWorld().getUID()) && !player.getGameMode().equals(GameMode.SPECTATOR)){
-                if (getLivingEntity().getLocation().distance(player.getLocation()) < smallestDistance) {
-                    closestCandidate = player.getUniqueId();
-                    smallestDistance = getLivingEntity().getLocation().distance(player.getLocation());
-                }
+            if (!canTarget(player) || !player.getWorld().getUID().equals(getLivingEntity().getWorld().getUID())) { continue; }
+
+            double distance = getLivingEntity().getLocation().distance(player.getLocation());
+            if (nearestCandidate == null || distance < nearestDistance) {
+                nearestDistance = distance;
+                nearestCandidate = player.getUniqueId();
             }
         }
-        if (closestCandidate != null){
-            if (activeTarget != closestCandidate){
-                activeTarget = closestCandidate;
+
+        if (nearestCandidate != null){
+            if (activeTarget != nearestCandidate){
+                activeTarget = nearestCandidate;
                 setNewTarget(getTarget());
             }
         }

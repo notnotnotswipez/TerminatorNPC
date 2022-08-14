@@ -1,4 +1,4 @@
-package me.swipez.terminatornpc.helper;
+package me.swipez.terminatornpc.util;
 
 import org.bukkit.Location;
 import org.bukkit.util.Vector;
@@ -6,10 +6,8 @@ import org.bukkit.util.Vector;
 import static org.bukkit.Location.normalizeYaw;
 
 public class TerminatorUtils {
-
     // More ripped code LOL. Dont worry theres original code in this plugin you just need to look really hard but trust me
     // You'll find it.
-
     public static boolean isLookingTowards(Location myLoc, Location theirLoc, float yawLimit, float pitchLimit) {
         Vector rel = theirLoc.toVector().subtract(myLoc.toVector()).normalize();
         float yaw = normalizeYaw(myLoc.getYaw());
@@ -53,5 +51,4 @@ public class TerminatorUtils {
         }
         return (float) (-yaw * (180.0 / Math.PI));
     }
-
 }

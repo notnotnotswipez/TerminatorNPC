@@ -2,7 +2,7 @@
 // Decompiled by Procyon v0.5.36
 // 
 
-package me.swipez.terminatornpc.RayCast;
+package me.swipez.terminatornpc.util;
 
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -15,8 +15,7 @@ import org.bukkit.util.Vector;
 import java.util.ArrayList;
 import java.util.Collection;
 
-public class Raycast
-{
+public class Raycast  {
     private final double divider = 100.0;
     private ArrayList<Material> passthroughMaterials;
     private final ArrayList<Location> testedLocations;

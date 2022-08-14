@@ -1,7 +1,6 @@
 package me.swipez.terminatornpc.loadout;
 
 import me.swipez.terminatornpc.TerminatorNPC;
-import net.citizensnpcs.npc.ai.speech.Chat;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;

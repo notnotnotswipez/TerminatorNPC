@@ -1,10 +1,9 @@
 
-package me.swipez.terminatornpc.RayCast;
+package me.swipez.terminatornpc.util;
 
 import org.bukkit.util.Vector;
 
-public class RaycastAPIMath
-{
+public class RaycastAPIMath {
     public static double cos(final double a) {
         return Math.cos(a);
     }

@@ -1,11 +1,13 @@
-package me.swipez.terminatornpc.terminatorTrait;
+package me.swipez.terminatornpc.trait;
 
+import me.swipez.terminatornpc.TerminatorNPC;
 import net.citizensnpcs.api.ai.flocking.Flocker;
 import net.citizensnpcs.api.ai.flocking.RadiusNPCFlock;
 import net.citizensnpcs.api.ai.flocking.SeparationBehavior;
 import net.citizensnpcs.api.persistence.Persist;
 import net.citizensnpcs.api.trait.Trait;
 import org.bukkit.Bukkit;
+import org.bukkit.GameMode;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
@@ -24,6 +26,13 @@ public class TerminatorFollow extends Trait {
     private Player player;
     @Persist
     private boolean protect;
+
+    public boolean canTarget(Player player) {
+        return !(player.getGameMode().equals(GameMode.CREATIVE)
+                || player.getGameMode().equals(GameMode.SPECTATOR)
+                || player.isInvulnerable()
+                || TerminatorNPC.ignoredPlayers.contains(player.getUniqueId()));
+    }
 
     public TerminatorFollow() {
         super("terminatorFollow");
@@ -77,13 +86,17 @@ public class TerminatorFollow extends Trait {
             }
         }
 
-        if (this.isActive()) {
+        if (this.isActive() && canTarget(player)) {
             if (!this.npc.getNavigator().isNavigating()) {
                 this.npc.getNavigator().setTarget(this.player, false);
             } else {
                 this.flock.run();
             }
+
+            return;
         }
+
+        this.npc.getNavigator().cancelNavigation();
     }
 
     public boolean toggle(OfflinePlayer player, boolean protect) {
