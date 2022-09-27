@@ -55,11 +55,6 @@ public final class TerminatorNPC extends JavaPlugin {
 
     @Override
     public boolean onCommand(CommandSender sender, org.bukkit.command.Command command, String cmdName, String[] args) {
-        String modifier = args.length > 0 ? args[0] : "";
-        if (!commands.hasCommand(command, modifier) && !modifier.isEmpty()) {
-            return suggestClosestModifier(sender, command.getName(), modifier);
-        }
-
         Object[] methodArgs = { sender, null };
         return commands.executeSafe(command, args, sender, methodArgs);
     }
@@ -68,15 +63,5 @@ public final class TerminatorNPC extends JavaPlugin {
         commands.setInjector(new Injector(this));
         // Register command classes
         commands.register(TerminatorCommands.class);
-    }
-
-    private boolean suggestClosestModifier(CommandSender sender, String command, String modifier) {
-        String closest = commands.getClosestCommandModifier(command, modifier);
-        if (!closest.isEmpty()) {
-            sender.sendMessage(ChatColor.GRAY + Messaging.tr(Messages.UNKNOWN_COMMAND));
-            sender.sendMessage(StringHelper.wrap(" /") + command + " " + StringHelper.wrap(closest));
-            return true;
-        }
-        return false;
     }
 }
