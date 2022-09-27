@@ -64,14 +64,4 @@ public final class TerminatorNPC extends JavaPlugin {
         // Register command classes
         commands.register(TerminatorCommands.class);
     }
-
-    private boolean suggestClosestModifier(CommandSender sender, String command, String modifier) {
-        String closest = commands.getClosestCommandModifier(command, modifier);
-        if (!closest.isEmpty()) {
-            sender.sendMessage(ChatColor.GRAY + Messaging.tr(Messages.UNKNOWN_COMMAND));
-            sender.sendMessage(StringHelper.wrap(" /") + command + " " + StringHelper.wrap(closest));
-            return true;
-        }
-        return false;
-    }
 }
