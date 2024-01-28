@@ -25,6 +25,7 @@ import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.util.Vector;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.entity.EntityDamageEvent;
+import org.bukkit.event.entity.EntityTargetLivingEntityEvent;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -70,6 +71,9 @@ public class TerminatorTrait extends Trait {
     public int blockPlaceTimeout = 0;
     Location targetsSwitchedWorldsLocation = null;
     int boatClutchCooldown = 0;
+    
+    boolean clutched = false;
+    Entity clutchedBoat = null;
 
     List<BlockFace> placeableBlockFaces = new LinkedList<>();
 
@@ -207,24 +211,53 @@ public class TerminatorTrait extends Trait {
                                 getLivingEntity().setSwimming(false);
                                 ((Player) getLivingEntity()).setSprinting(false);
                             }
+                            if (clutched && getLivingEntity().getFallDistance() == 0) {
+                                clutched = false;
+                                if (clutchedBoat == null) {
+                                    if (getLivingEntity().getLocation().getBlock().getType().equals(Material.WATER)) {
+                                        getLivingEntity().getLocation().getBlock().setType(Material.AIR);
+                                    }
+                                } else {
+                                    setMainHandItem(new ItemStack(terminatorLoadout.getSwordMaterial()));
+                                    clutchedBoat.removePassenger(getLivingEntity());
+                                }
+                            }
                             if (!shouldBeStopped) {
                                 if (canTarget(getTarget())) {
                                     if (blockPlaceCooldown == 0){
-                                        if (distanceToGround(4) && !isInWater) {
+                                        if (distanceToGround(4) && !clutched && !isInWater) {
                                             placeBlockUnderFeet(terminatorLoadout.getBlockMaterial());
                                         }
                                         if (getLivingEntity().getLocation().clone().subtract(0,1,0).getBlock().getType().equals(Material.WATER) && !isFullSwimming){
                                             placeBlockUnderFeet(terminatorLoadout.getBlockMaterial());
                                         }
                                     }
+                                    if (getLivingEntity().getFallDistance() > 2 && getLivingEntity().getLocation().clone().subtract(0, 1, 0).getBlock().isEmpty() && !(getLivingEntity().getLocation().clone().subtract(0, 2, 0).getBlock().isEmpty() || getLivingEntity().getLocation().clone().subtract(0, 2, 0).getBlock().isLiquid()) && !isInWater) {
+                                        if (!getLivingEntity().getLocation().getWorld().isUltraWarm()) {
+                                            setMainHandItem(new ItemStack(Material.WATER_BUCKET));
+                                            lookDown();
+                                            PlayerAnimation.ARM_SWING.play((Player) getLivingEntity());
+                                            getLivingEntity().getLocation().clone().subtract(0, 1, 0).getBlock().setType(Material.WATER);
+                                            getLivingEntity().getWorld().playSound(getLivingEntity().getLocation().clone().subtract(0, 1, 0), Sound.ITEM_BUCKET_EMPTY, 1, 1);
+                                            setMainHandItem(new ItemStack(Material.BUCKET));
+                                        } else {
+                                            setMainHandItem(new ItemStack(Material.OAK_BOAT));
+                                            lookDown();
+                                            PlayerAnimation.ARM_SWING.play((Player) getLivingEntity());
+                                            clutchedBoat = getLivingEntity().getWorld().spawnEntity(getLivingEntity().getLocation().clone().subtract(0,0.9,0), EntityType.BOAT);
+                                            clutchedBoat.addPassenger(getLivingEntity());
+                                        }
+                                        clutched = true;
+                                        blockPlaceCooldown = 10;
+                                    }
                                     if (getLivingEntity().getLocation().clone().subtract(0,1,0).getBlock().getType().equals(Material.LAVA)){
                                         if (boatClutchCooldown == 0){
                                             setMainHandItem(new ItemStack(Material.OAK_BOAT));
+                                            lookDown();
                                             PlayerAnimation.ARM_SWING.play((Player) getLivingEntity());
                                             getLivingEntity().getWorld().spawnEntity(getLivingEntity().getLocation().clone().subtract(0,0.9,0), EntityType.BOAT);
                                             tryJump(0.7, true);
                                             boatClutchCooldown = 10;
-                                            lookDown();
                                         }
                                     }
                                 } else {
@@ -950,6 +983,12 @@ public class TerminatorTrait extends Trait {
         if (event.getEntity() != terminator.getEntity()) return;
         if (event.getCause() != EntityDamageEvent.DamageCause.DROWNING) return;
         // Prevent drowning damage, as this makes the AI useless in water, as it does not get air
+        event.setCancelled(true);
+    }
+    
+    @EventHandler
+    private void onEntityTarget(EntityTargetLivingEntityEvent event) {
+        if (event.getTarget() == null || event.getTarget() != getLivingEntity()) return;
         event.setCancelled(true);
     }
 
