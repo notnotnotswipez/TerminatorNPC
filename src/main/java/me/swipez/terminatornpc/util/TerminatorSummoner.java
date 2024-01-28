@@ -42,6 +42,7 @@ public class TerminatorSummoner {
             NPC npc = new CitizensNPC(UUID.randomUUID(), TerminatorNPC.getUniqueID(), name, EntityControllers.createForType(EntityType.PLAYER), CitizensAPI.getNPCRegistry());
             npc.spawn(location);
             npc.data().set(NPC.DEFAULT_PROTECTED_METADATA, false);
+            npc.setProtected(false);
 
             npc.getNavigator().getLocalParameters()
                     .attackRange(10)
