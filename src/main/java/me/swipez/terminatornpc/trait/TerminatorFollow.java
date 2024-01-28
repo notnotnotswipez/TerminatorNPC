@@ -58,15 +58,21 @@ public class TerminatorFollow extends Trait {
     @EventHandler
     private void onEntityDamage(EntityDamageByEntityEvent event) {
         if (this.isActive() && this.protect && event.getEntity().equals(this.player)) {
-            Entity damager = event.getDamager();
-            if (event.getEntity() instanceof Projectile) {
-                Projectile projectile = (Projectile)event.getEntity();
-                if (projectile.getShooter() instanceof Entity) {
-                    damager = (Entity)projectile.getShooter();
+            Entity damagerEntity = event.getDamager();
+            Player damager = null;
+            
+            if (damagerEntity instanceof Player) {
+                damager = (Player)damagerEntity;
+            } else if (damager instanceof Projectile) {
+                Projectile projectile = (Projectile)damager;
+                if (projectile.getShooter() instanceof Player) {
+                    damager = (Player)projectile.getShooter();
                 }
             }
 
-            this.npc.getNavigator().setTarget(damager, true);
+            if (damager != null && canTarget(damager)) {
+                this.npc.getNavigator().setTarget(damager, true);
+            }
         }
 
     }

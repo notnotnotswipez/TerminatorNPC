@@ -23,6 +23,8 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.util.Vector;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.entity.EntityDamageEvent;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -941,6 +943,14 @@ public class TerminatorTrait extends Trait {
                 setNewTarget(getTarget());
             }
         }
+    }
+    
+    @EventHandler
+    private void onEntityDamage(EntityDamageEvent event) {
+        if (event.getEntity() != terminator.getEntity()) return;
+        if (event.getCause() != EntityDamageEvent.DamageCause.DROWNING) return;
+        // Prevent drowning damage, as this makes the AI useless in water, as it does not get air
+        event.setCancelled(true);
     }
 
     public Player getTarget(){
