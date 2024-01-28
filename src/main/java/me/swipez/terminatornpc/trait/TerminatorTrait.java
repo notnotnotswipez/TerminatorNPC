@@ -215,7 +215,9 @@ public class TerminatorTrait extends Trait {
                                 clutched = false;
                                 if (clutchedBoat == null) {
                                     if (getLivingEntity().getLocation().getBlock().getType().equals(Material.WATER)) {
+                                        PlayerAnimation.ARM_SWING.play((Player) getLivingEntity());
                                         getLivingEntity().getLocation().getBlock().setType(Material.AIR);
+                                        setMainHandItem(new ItemStack(Material.WATER_BUCKET));
                                     }
                                 } else {
                                     setMainHandItem(new ItemStack(terminatorLoadout.getSwordMaterial()));
@@ -382,7 +384,7 @@ public class TerminatorTrait extends Trait {
                                         Bukkit.getLogger().log(Level.WARNING, "NPC spawned at: "+location.toString());
                                     }
                                     npc.spawn(getRandomLocation(getTarget().getLocation(), 10, 20));
-                                    npc.data().set(NPC.DEFAULT_PROTECTED_METADATA, false);
+                                    npc.data().set(NPC.Metadata.DEFAULT_PROTECTED, false);
                                     needsArmorUpdate = true;
                                     teleportToAvailableSlot();
                                 }
