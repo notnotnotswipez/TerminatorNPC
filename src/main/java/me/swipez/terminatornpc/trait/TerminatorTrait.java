@@ -146,7 +146,8 @@ public class TerminatorTrait extends Trait {
     }
 
     public boolean canTarget(Player player) {
-        return !(player.getGameMode().equals(GameMode.CREATIVE)
+        return !(player == null
+                || player.getGameMode().equals(GameMode.CREATIVE)
                 || player.getGameMode().equals(GameMode.SPECTATOR)
                 || player.isInvulnerable()
                 || TerminatorNPC.ignoredPlayers.contains(player.getUniqueId()));
@@ -337,6 +338,9 @@ public class TerminatorTrait extends Trait {
                                 respawnTimer = 30*20;
                             }
                             else {
+                                if (getTarget() == null) {
+                                    return;
+                                }
                                 respawnTimer--;
                                 if (respawnTimer == 0) {
                                     if (debug){
@@ -940,7 +944,7 @@ public class TerminatorTrait extends Trait {
     }
 
     public Player getTarget(){
-        return Bukkit.getPlayer(activeTarget);
+        return activeTarget != null ? Bukkit.getPlayer(activeTarget) : null;
     }
 
     private List<Entity> getNearbyEntities(int range){

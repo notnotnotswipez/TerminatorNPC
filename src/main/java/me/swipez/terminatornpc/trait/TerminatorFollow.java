@@ -28,7 +28,8 @@ public class TerminatorFollow extends Trait {
     private boolean protect;
 
     public boolean canTarget(Player player) {
-        return !(player.getGameMode().equals(GameMode.CREATIVE)
+        return !(player == null
+                || player.getGameMode().equals(GameMode.CREATIVE)
                 || player.getGameMode().equals(GameMode.SPECTATOR)
                 || player.isInvulnerable()
                 || TerminatorNPC.ignoredPlayers.contains(player.getUniqueId()));
@@ -100,6 +101,10 @@ public class TerminatorFollow extends Trait {
     }
 
     public boolean toggle(OfflinePlayer player, boolean protect) {
+        if (player == null) {
+            return this.enabled;
+        }
+        
         this.protect = protect;
         if (player.getUniqueId().equals(this.followingUUID) || this.followingUUID == null) {
             this.enabled = !this.enabled;
