@@ -26,6 +26,7 @@ import org.bukkit.util.Vector;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.EntityTargetLivingEntityEvent;
+import org.bukkit.event.player.PlayerPortalEvent;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -230,7 +231,7 @@ public class TerminatorTrait extends Trait {
                                             placeBlockUnderFeet(terminatorLoadout.getBlockMaterial());
                                         }
                                     }
-                                    if (getLivingEntity().getFallDistance() > 2 && getLivingEntity().getLocation().clone().subtract(0, 1, 0).getBlock().isEmpty() && !(getLivingEntity().getLocation().clone().subtract(0, 2, 0).getBlock().isEmpty() || getLivingEntity().getLocation().clone().subtract(0, 2, 0).getBlock().isLiquid()) && !isInWater) {
+                                    if (getLivingEntity().getFallDistance() > 2 && getLivingEntity().getLocation().clone().subtract(0, 1, 0).getBlock().isEmpty() && !(getLivingEntity().getLocation().clone().subtract(0, 2, 0).getBlock().isEmpty() || getLivingEntity().getLocation().clone().subtract(0, 2, 0).getBlock().isLiquid()) && boatClutchCooldown == 0 && !isInWater) {
                                         if (!getLivingEntity().getLocation().getWorld().isUltraWarm()) {
                                             setMainHandItem(new ItemStack(Material.WATER_BUCKET));
                                             lookDown();
@@ -403,7 +404,7 @@ public class TerminatorTrait extends Trait {
             setMainHandItem(new ItemStack(Material.DIAMOND_SHOVEL));
         } else if (chosenBrokenBlock.getType().toString().toLowerCase().contains("leaves") || chosenBrokenBlock.getType().toString().toLowerCase().contains("wart")) {
             setMainHandItem(new ItemStack(Material.SHEARS));
-        } else if (chosenBrokenBlock.getType().toString().toLowerCase().contains("log") || chosenBrokenBlock.getType().toString().toLowerCase().contains("plank") || chosenBrokenBlock.getType().toString().toLowerCase().contains("stem")) {
+        } else if (chosenBrokenBlock.getType().toString().toLowerCase().contains("log") || chosenBrokenBlock.getType().toString().toLowerCase().contains("plank") || chosenBrokenBlock.getType().toString().toLowerCase().contains("stem") || chosenBrokenBlock.getType().toString().toLowerCase().contains("wood")) {
             setMainHandItem(new ItemStack(Material.DIAMOND_AXE));
         } else {
             setMainHandItem(new ItemStack(Material.DIAMOND_PICKAXE));
@@ -524,7 +525,8 @@ public class TerminatorTrait extends Trait {
 
     private boolean canPlaceBlock(Location location){
         if (location.distance(getLivingEntity().getLocation()) <= 5){
-            if (location.getBlock().getType().isAir() || !location.getBlock().getType().isSolid() || location.getBlock().isLiquid()){
+            Material material = location.getBlock().getType();
+            if ((material.isAir() || !material.isSolid() || location.getBlock().isLiquid()) && !(material.equals(Material.END_PORTAL) || material.equals(Material.NETHER_PORTAL))) {
                 for (BlockFace blockFace : placeableBlockFaces){
                     if (location.getBlock().getRelative(blockFace).getType().isSolid() && !location.getBlock().getRelative(blockFace).isLiquid()){
                         return true;
@@ -540,7 +542,8 @@ public class TerminatorTrait extends Trait {
         config.item(((Player) getLivingEntity()).getInventory().getItemInMainHand());
         config.radius(3);
 
-        if (!location.getBlock().getType().isAir()){
+        Material material = location.getBlock().getType();
+        if (!(material.isAir() || material.equals(Material.END_PORTAL) || material.equals(Material.NETHER_PORTAL))) {
             BlockBreaker breaker = npc.getBlockBreaker(location.getBlock(), config);
             if (breaker.shouldExecute()) {
                 TaskRunnable run = new TaskRunnable(breaker, this, location);
@@ -981,6 +984,15 @@ public class TerminatorTrait extends Trait {
         if (event.getEntity() != terminator.getEntity()) return;
         if (event.getCause() != EntityDamageEvent.DamageCause.DROWNING) return;
         // Prevent drowning damage, as this makes the AI useless in water, as it does not get air
+        event.setCancelled(true);
+    }
+    
+    @EventHandler
+    private void onPlayerPortalTravel(PlayerPortalEvent event) {
+        if (event.getPlayer() != terminator.getEntity()) return;
+        
+        // We have to prevent the teleport event to workaround a citizen bug.
+        // If a npc travells through a portall it comes invincible
         event.setCancelled(true);
     }
     
