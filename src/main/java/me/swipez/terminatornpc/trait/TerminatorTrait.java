@@ -220,17 +220,13 @@ public class TerminatorTrait extends Trait {
                                         setMainHandItem(new ItemStack(Material.WATER_BUCKET));
                                     }
                                 } else {
-                                    setMainHandItem(new ItemStack(terminatorLoadout.getSwordMaterial()));
                                     clutchedBoat.removePassenger(getLivingEntity());
                                 }
                             }
                             if (!shouldBeStopped) {
                                 if (canTarget(getTarget())) {
                                     if (blockPlaceCooldown == 0){
-                                        if (distanceToGround(4) && !clutched && !isInWater) {
-                                            placeBlockUnderFeet(terminatorLoadout.getBlockMaterial());
-                                        }
-                                        if (getLivingEntity().getLocation().clone().subtract(0,1,0).getBlock().getType().equals(Material.WATER) && !isFullSwimming){
+                                        if (getLivingEntity().getLocation().clone().subtract(0,1,0).getBlock().getType().equals(Material.WATER) && !clutched && !isFullSwimming){
                                             placeBlockUnderFeet(terminatorLoadout.getBlockMaterial());
                                         }
                                     }
