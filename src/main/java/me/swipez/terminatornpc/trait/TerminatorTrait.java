@@ -92,7 +92,7 @@ public class TerminatorTrait extends Trait {
 
     private final TerminatorLoadout terminatorLoadout;
 
-    public boolean debug = true;
+    public boolean debug = false;
 
     public TerminatorTrait(NPC terminator, TerminatorLoadout terminatorLoadout) {
         super("terminator");
