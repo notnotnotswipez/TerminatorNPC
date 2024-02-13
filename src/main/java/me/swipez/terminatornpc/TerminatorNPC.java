@@ -2,6 +2,7 @@ package me.swipez.terminatornpc;
 
 import me.swipez.terminatornpc.command.*;
 import me.swipez.terminatornpc.loadout.TerminatorLoadout;
+import me.swipez.terminatornpc.util.TerminatorHealer;
 import net.citizensnpcs.api.command.CommandManager;
 import net.citizensnpcs.api.command.Injector;
 import net.citizensnpcs.api.npc.NPC;
@@ -44,6 +45,9 @@ public final class TerminatorNPC extends JavaPlugin {
         // Register commands
         registerCommands();
         commands.registerTabCompletion(this);
+        
+        // Register healer
+        new TerminatorHealer(this);
     }
 
     @Override

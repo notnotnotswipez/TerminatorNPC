@@ -23,6 +23,11 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.util.Vector;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
+import org.bukkit.event.entity.EntityDamageEvent;
+import org.bukkit.event.entity.EntityTargetLivingEntityEvent;
+import org.bukkit.event.player.PlayerPortalEvent;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -68,6 +73,9 @@ public class TerminatorTrait extends Trait {
     public int blockPlaceTimeout = 0;
     Location targetsSwitchedWorldsLocation = null;
     int boatClutchCooldown = 0;
+    
+    boolean clutched = false;
+    Entity clutchedBoat = null;
 
     List<BlockFace> placeableBlockFaces = new LinkedList<>();
 
@@ -89,7 +97,7 @@ public class TerminatorTrait extends Trait {
     public TerminatorTrait(NPC terminator, TerminatorLoadout terminatorLoadout) {
         super("terminator");
         this.terminator = terminator;
-        location = terminator.getEntity().getLocation();
+        this.location = terminator.getEntity().getLocation();
 
         placeableBlockFaces.add(BlockFace.UP);
         placeableBlockFaces.add(BlockFace.DOWN);
@@ -146,7 +154,8 @@ public class TerminatorTrait extends Trait {
     }
 
     public boolean canTarget(Player player) {
-        return !(player.getGameMode().equals(GameMode.CREATIVE)
+        return !(player == null
+                || player.getGameMode().equals(GameMode.CREATIVE)
                 || player.getGameMode().equals(GameMode.SPECTATOR)
                 || player.isInvulnerable()
                 || TerminatorNPC.ignoredPlayers.contains(player.getUniqueId()));
@@ -162,7 +171,7 @@ public class TerminatorTrait extends Trait {
             public void run() {
                 if (!delete){
                     try {
-                        if (npc.isSpawned()) {
+                        if (npc.isSpawned() && getLivingEntity() != null) {
                             if (needsArmorUpdate){
                                 if (debug){
                                     Bukkit.getLogger().log(Level.INFO, "NPC requested an armor update!");
@@ -170,8 +179,8 @@ public class TerminatorTrait extends Trait {
                                 updateArmor();
                                 needsArmorUpdate = false;
                             }
-                            checkForNewTarget();
                             cooldownsDecrement();
+                            checkForNewTarget();
                             if (isInWater){
                                 if (!getLivingEntity().isSwimming()){
                                     if (debug){
@@ -181,7 +190,7 @@ public class TerminatorTrait extends Trait {
                                     getLivingEntity().setSwimming(true);
                                 }
                                 if (!isFullSwimming){
-                                    if (getLivingEntity().getLocation().clone().add(0,1,0).getBlock().isLiquid()){
+                                    if (getLivingEntity().getLocation().add(0,1,0).getBlock().isLiquid()){
                                         if (debug){
                                             Bukkit.getLogger().log(Level.INFO, "NPC was set to fully swim!");
                                         }
@@ -190,7 +199,7 @@ public class TerminatorTrait extends Trait {
                                     }
                                 }
                                 else {
-                                    if (!getLivingEntity().getLocation().clone().add(0,1,0).getBlock().isLiquid()){
+                                    if (!getLivingEntity().getLocation().add(0,1,0).getBlock().isLiquid()){
                                         if (debug){
                                             Bukkit.getLogger().log(Level.INFO, "NPC was set to stop swimming!");
                                         }
@@ -204,24 +213,51 @@ public class TerminatorTrait extends Trait {
                                 getLivingEntity().setSwimming(false);
                                 ((Player) getLivingEntity()).setSprinting(false);
                             }
+                            if (clutched && getLivingEntity().getFallDistance() == 0) {
+                                clutched = false;
+                                if (clutchedBoat == null) {
+                                    if (getLivingEntity().getLocation().getBlock().getType().equals(Material.WATER)) {
+                                        PlayerAnimation.ARM_SWING.play((Player) getLivingEntity());
+                                        getLivingEntity().getLocation().getBlock().setType(Material.AIR);
+                                        setMainHandItem(new ItemStack(Material.WATER_BUCKET));
+                                    }
+                                } else {
+                                    clutchedBoat.removePassenger(getLivingEntity());
+                                }
+                            }
                             if (!shouldBeStopped) {
                                 if (canTarget(getTarget())) {
                                     if (blockPlaceCooldown == 0){
-                                        if (distanceToGround(4) && !isInWater) {
-                                            placeBlockUnderFeet(terminatorLoadout.getBlockMaterial());
-                                        }
-                                        if (getLivingEntity().getLocation().clone().subtract(0,1,0).getBlock().getType().equals(Material.WATER) && !isFullSwimming){
+                                        if (getLivingEntity().getLocation().subtract(0,1,0).getBlock().getType().equals(Material.WATER) && !clutched && !isFullSwimming){
                                             placeBlockUnderFeet(terminatorLoadout.getBlockMaterial());
                                         }
                                     }
-                                    if (getLivingEntity().getLocation().clone().subtract(0,1,0).getBlock().getType().equals(Material.LAVA)){
+                                    if (getLivingEntity().getFallDistance() > 2 && getLivingEntity().getLocation().subtract(0, 1, 0).getBlock().isEmpty() && !(getLivingEntity().getLocation().subtract(0, 2, 0).getBlock().isEmpty() || getLivingEntity().getLocation().subtract(0, 2, 0).getBlock().isLiquid()) && boatClutchCooldown == 0 && !isInWater) {
+                                        if (!getLivingEntity().getLocation().getWorld().isUltraWarm()) {
+                                            setMainHandItem(new ItemStack(Material.WATER_BUCKET));
+                                            lookDown();
+                                            PlayerAnimation.ARM_SWING.play((Player) getLivingEntity());
+                                            getLivingEntity().getLocation().subtract(0, 1, 0).getBlock().setType(Material.WATER);
+                                            getLivingEntity().getWorld().playSound(getLivingEntity().getLocation().subtract(0, 1, 0), Sound.ITEM_BUCKET_EMPTY, 1, 1);
+                                            setMainHandItem(new ItemStack(Material.BUCKET));
+                                        } else {
+                                            setMainHandItem(new ItemStack(Material.OAK_BOAT));
+                                            lookDown();
+                                            PlayerAnimation.ARM_SWING.play((Player) getLivingEntity());
+                                            clutchedBoat = getLivingEntity().getWorld().spawnEntity(getLivingEntity().getLocation().subtract(0,0.9,0), EntityType.BOAT);
+                                            clutchedBoat.addPassenger(getLivingEntity());
+                                        }
+                                        clutched = true;
+                                        blockPlaceCooldown = 10;
+                                    }
+                                    if (getLivingEntity().getLocation().subtract(0,1,0).getBlock().getType().equals(Material.LAVA)){
                                         if (boatClutchCooldown == 0){
                                             setMainHandItem(new ItemStack(Material.OAK_BOAT));
+                                            lookDown();
                                             PlayerAnimation.ARM_SWING.play((Player) getLivingEntity());
-                                            getLivingEntity().getWorld().spawnEntity(getLivingEntity().getLocation().clone().subtract(0,0.9,0), EntityType.BOAT);
+                                            getLivingEntity().getWorld().spawnEntity(getLivingEntity().getLocation().subtract(0,0.9,0), EntityType.BOAT);
                                             tryJump(0.7, true);
                                             boatClutchCooldown = 10;
-                                            lookDown();
                                         }
                                     }
                                 } else {
@@ -235,13 +271,13 @@ public class TerminatorTrait extends Trait {
                             if (getTarget() != null && getLivingEntity() != null && getTarget().getWorld().getUID().equals(getLivingEntity().getWorld().getUID())) {
                                 if (isCurrentlyDiggingDownwards) {
                                     if (getLivingEntity().isOnGround()) {
-                                        if (!getLivingEntity().getLocation().clone().subtract(0, 1, 0).getBlock().getType().isAir()) {
+                                        if (!getLivingEntity().getLocation().subtract(0, 1, 0).getBlock().getType().isAir()) {
                                             centerOnBlock();
-                                            if (!scheduledBrokenBlocks.contains(getLivingEntity().getLocation().clone().subtract(0, 1, 0).getBlock())) {
+                                            if (!scheduledBrokenBlocks.contains(getLivingEntity().getLocation().subtract(0, 1, 0).getBlock())) {
                                                 if (debug){
                                                     Bukkit.getLogger().log(Level.INFO, "Added block underneath me to queued blocks. (Dig downwards)");
                                                 }
-                                                scheduledBrokenBlocks.add(getLivingEntity().getLocation().clone().subtract(0, 1, 0).getBlock());
+                                                scheduledBrokenBlocks.add(getLivingEntity().getLocation().subtract(0, 1, 0).getBlock());
                                             }
                                         }
                                     }
@@ -263,7 +299,7 @@ public class TerminatorTrait extends Trait {
                                                 if (debug){
                                                     Bukkit.getLogger().log(Level.INFO, "Placed block underneath to go upwards.");
                                                 }
-                                                getLivingEntity().teleport(getLivingEntity().getLocation().clone().add(0,1,0));
+                                                getLivingEntity().teleport(getLivingEntity().getLocation().add(0,1,0));
                                                 lookDown();
                                                 placeBlockUnderFeet(terminatorLoadout.getBlockMaterial());
                                             } else {
@@ -271,9 +307,9 @@ public class TerminatorTrait extends Trait {
                                                     Bukkit.getLogger().log(Level.INFO, "Breaking Block above head.");
                                                 }
                                                 isBreakingWhileUpwards = true;
-                                                Block chosenBrokenBlock = getLivingEntity().getLocation().clone().add(0, 2, 0).getBlock();
+                                                Block chosenBrokenBlock = getLivingEntity().getLocation().add(0, 2, 0).getBlock();
                                                 getProperToolToBreakBlock(chosenBrokenBlock);
-                                                breakBlock(getLivingEntity().getLocation().clone().add(0, 2, 0));
+                                                breakBlock(getLivingEntity().getLocation().add(0, 2, 0));
                                             }
                                         }
                                         blockPlaceCooldown = 10;
@@ -337,13 +373,16 @@ public class TerminatorTrait extends Trait {
                                 respawnTimer = 30*20;
                             }
                             else {
+                                if (getTarget() == null) {
+                                    return;
+                                }
                                 respawnTimer--;
                                 if (respawnTimer == 0) {
                                     if (debug){
                                         Bukkit.getLogger().log(Level.WARNING, "NPC spawned at: "+location.toString());
                                     }
                                     npc.spawn(getRandomLocation(getTarget().getLocation(), 10, 20));
-                                    npc.data().set(NPC.DEFAULT_PROTECTED_METADATA, false);
+                                    npc.data().set(NPC.Metadata.DEFAULT_PROTECTED, false);
                                     needsArmorUpdate = true;
                                     teleportToAvailableSlot();
                                 }
@@ -366,8 +405,10 @@ public class TerminatorTrait extends Trait {
             setMainHandItem(new ItemStack(Material.DIAMOND_SHOVEL));
         } else if (chosenBrokenBlock.getType().toString().toLowerCase().contains("leaves") || chosenBrokenBlock.getType().toString().toLowerCase().contains("wart")) {
             setMainHandItem(new ItemStack(Material.SHEARS));
-        } else if (chosenBrokenBlock.getType().toString().toLowerCase().contains("log") || chosenBrokenBlock.getType().toString().toLowerCase().contains("plank") || chosenBrokenBlock.getType().toString().toLowerCase().contains("stem")) {
+        } else if (chosenBrokenBlock.getType().toString().toLowerCase().contains("log") || chosenBrokenBlock.getType().toString().toLowerCase().contains("plank") || chosenBrokenBlock.getType().toString().toLowerCase().contains("stem") || chosenBrokenBlock.getType().toString().toLowerCase().contains("wood")) {
             setMainHandItem(new ItemStack(Material.DIAMOND_AXE));
+        } else if (chosenBrokenBlock.getType().equals(Material.COBWEB) && terminatorLoadout.getSwordMaterial() != null) {
+            setMainHandItem(new ItemStack(terminatorLoadout.getSwordMaterial()));
         } else {
             setMainHandItem(new ItemStack(Material.DIAMOND_PICKAXE));
         }
@@ -409,8 +450,8 @@ public class TerminatorTrait extends Trait {
     }
 
     private boolean locationIsTeleportable(Location location) {
-        if (location.clone().subtract(0, 1, 0).getBlock().getType().isSolid() && !location.clone().subtract(0, 1, 0).getBlock().isLiquid() && location.getBlock().getType().isAir()) {
-            return location.clone().add(0, 1, 0).getBlock().getType().isAir();
+        if (location.subtract(0, 1, 0).getBlock().getType().isSolid() && !location.subtract(0, 1, 0).getBlock().isLiquid() && location.getBlock().getType().isAir()) {
+            return location.add(0, 1, 0).getBlock().getType().isAir();
         }
         return false;
     }
@@ -426,7 +467,7 @@ public class TerminatorTrait extends Trait {
             randomZ *= -1;
         }
 
-        Location clone = location.clone();
+        Location clone = location;
         clone.setX(clone.getX()+randomX);
         clone.setZ(clone.getZ()+randomZ);
 
@@ -451,11 +492,11 @@ public class TerminatorTrait extends Trait {
     }
 
     private boolean distanceToGround(int distance){
-        Location location = getLivingEntity().getLocation().clone();
+        Location location = getLivingEntity().getLocation();
         Block testBlock = location.getBlock();
         boolean isAirAllTheWay = true;
         for (int i = 0; i < distance; i++){
-            testBlock = location.clone().subtract(0,i,0).getBlock();
+            testBlock = location.subtract(0,i,0).getBlock();
             if (testBlock.getType().isSolid() || testBlock.isLiquid()){
                 isAirAllTheWay = false;
                 break;
@@ -465,18 +506,18 @@ public class TerminatorTrait extends Trait {
     }
 
     private boolean aboveHeadIsAir(){
-        return getLivingEntity().getLocation().clone().add(0,2,0).getBlock().isEmpty();
+        return getLivingEntity().getLocation().add(0,2,0).getBlock().isEmpty();
     }
 
     private void placeBlockUnderFeet(Material material){
         blockBreakTimeout = 0;
         shouldBeStopped = false;
         setMainHandItem(new ItemStack(material));
-        if (canPlaceBlock(getLivingEntity().getLocation().clone().subtract(0,1,0))){
+        if (canPlaceBlock(getLivingEntity().getLocation().subtract(0,1,0))){
             lookDown();
             PlayerAnimation.ARM_SWING.play((Player) getLivingEntity());
-            getLivingEntity().getLocation().clone().subtract(0,1,0).getBlock().setType(material);
-            getLivingEntity().getWorld().playSound(getLivingEntity().getLocation().clone().subtract(0,1,0), Sound.BLOCK_STONE_PLACE, 1, 1);
+            getLivingEntity().getLocation().subtract(0,1,0).getBlock().setType(material);
+            getLivingEntity().getWorld().playSound(getLivingEntity().getLocation().subtract(0,1,0), Sound.BLOCK_STONE_PLACE, 1, 1);
             blockPlaceCooldown = 10;
         }
     }
@@ -487,7 +528,8 @@ public class TerminatorTrait extends Trait {
 
     private boolean canPlaceBlock(Location location){
         if (location.distance(getLivingEntity().getLocation()) <= 5){
-            if (location.getBlock().getType().isAir() || !location.getBlock().getType().isSolid() || location.getBlock().isLiquid()){
+            Material material = location.getBlock().getType();
+            if ((material.isAir() || !material.isSolid() || location.getBlock().isLiquid()) && !(material.equals(Material.END_PORTAL) || material.equals(Material.NETHER_PORTAL))) {
                 for (BlockFace blockFace : placeableBlockFaces){
                     if (location.getBlock().getRelative(blockFace).getType().isSolid() && !location.getBlock().getRelative(blockFace).isLiquid()){
                         return true;
@@ -503,7 +545,8 @@ public class TerminatorTrait extends Trait {
         config.item(((Player) getLivingEntity()).getInventory().getItemInMainHand());
         config.radius(3);
 
-        if (!location.getBlock().getType().isAir()){
+        Material material = location.getBlock().getType();
+        if (!(material.isAir() || material.equals(Material.END_PORTAL) || material.equals(Material.NETHER_PORTAL))) {
             BlockBreaker breaker = npc.getBlockBreaker(location.getBlock(), config);
             if (breaker.shouldExecute()) {
                 TaskRunnable run = new TaskRunnable(breaker, this, location);
@@ -645,7 +688,7 @@ public class TerminatorTrait extends Trait {
                 if (!shouldBeStopped){
                     Util.faceLocation(npc.getEntity(), player.getLocation());
                     Block block = getBlockInFront(1).getBlock();
-                    if (block.isEmpty()){
+                    if (block.isEmpty() || block.getType().equals(Material.NETHER_PORTAL)) {
                         if (debug){
                             Bukkit.getLogger().log(Level.INFO, "NPC is attacking.");
                         }
@@ -724,8 +767,9 @@ public class TerminatorTrait extends Trait {
         if (followThroughDimension > 0){
             followThroughDimension--;
             if (followThroughDimension == 0){
-                if (getTarget().getWorld().getUID() != getLivingEntity().getWorld().getUID()){
+                if (getTarget().getWorld() != getLivingEntity().getWorld()){
                     getLivingEntity().teleport(targetsSwitchedWorldsLocation);
+                    Bukkit.broadcastMessage(targetsSwitchedWorldsLocation.toString());
                     if (debug){
                         Bukkit.getLogger().log(Level.INFO, "Travelling after target through dimension.");
                     }
@@ -748,7 +792,7 @@ public class TerminatorTrait extends Trait {
 
     private void checkForLocationUpdate(){
         if (!updatedThisTick){
-            location = getLivingEntity().getLocation().clone();
+            location = getLivingEntity().getLocation();
             updatedThisTick = true;
         }
         else {
@@ -761,11 +805,12 @@ public class TerminatorTrait extends Trait {
                 isStuck = true;
                 if (!isCurrentlyPlacingUpwards && !isCurrentlyBreakingABlock && shouldJump && !shouldBeStopped){
                     if (canTarget(getTarget())) {
-                        if (!getLivingEntity().getLocation().clone().add(0,2,0).getBlock().isEmpty()){
+                        Block block = getLivingEntity().getLocation().add(0,2,0).getBlock();
+                        if (!block.isEmpty() && !block.getType().equals(Material.NETHER_PORTAL)) {
                             if (debug){
                                 Bukkit.getLogger().log(Level.INFO, "Block is above me, breaking.");
                             }
-                            scheduledBrokenBlocks.add(getLivingEntity().getLocation().clone().add(0,2,0).getBlock());
+                            scheduledBrokenBlocks.add(getLivingEntity().getLocation().add(0,2,0).getBlock());
                         }
                     } else {
                         activeTarget = null;
@@ -779,8 +824,8 @@ public class TerminatorTrait extends Trait {
                     if (!getBlockInFront(1).getBlock().isEmpty() && !scheduledBrokenBlocks.contains(getBlockInFront(1).getBlock())){
                         scheduledBrokenBlocks.add(getBlockInFront(1).getBlock());
                     }
-                    if (!getBlockInFront(1).subtract(0, 1, 0).getBlock().isEmpty() && !scheduledBrokenBlocks.contains(getBlockInFront(1).clone().subtract(0, 1, 0).getBlock())){
-                        scheduledBrokenBlocks.add(getBlockInFront(1).clone().subtract(0, 1, 0).getBlock());
+                    if (!getBlockInFront(1).subtract(0, 1, 0).getBlock().isEmpty() && !scheduledBrokenBlocks.contains(getBlockInFront(1).subtract(0, 1, 0).getBlock())){
+                        scheduledBrokenBlocks.add(getBlockInFront(1).subtract(0, 1, 0).getBlock());
                     }
                 }
                 double yDifference = getTargetYDifference();
@@ -817,7 +862,7 @@ public class TerminatorTrait extends Trait {
                 }
                 else {
                     if (isCurrentlyDiggingDownwards){
-                        if (yDifference >= -1){
+                        if (yDifference >= 0){
                             if (debug){
                                 Bukkit.getLogger().log(Level.INFO, "Stopping digging downwards.");
                             }
@@ -836,7 +881,7 @@ public class TerminatorTrait extends Trait {
     }
 
     private void centerOnBlock(){
-        getLivingEntity().teleport(getLivingEntity().getLocation().getBlock().getLocation().clone().add(0.5, 0, 0.5));
+        getLivingEntity().teleport(getLivingEntity().getLocation().getBlock().getLocation().add(0.5, 0, 0.5));
     }
 
     // This is literally just ripped code from Sentinel. Thanks McMonkey
@@ -938,9 +983,50 @@ public class TerminatorTrait extends Trait {
             }
         }
     }
+    
+    @EventHandler(priority = EventPriority.HIGH)
+    private void onEntityDamage(EntityDamageEvent event) {
+        if (event.getEntity() != terminator.getEntity()) return;
+        if (event.getCause() != EntityDamageEvent.DamageCause.DROWNING) return;
+        // Prevent drowning damage, as this makes the AI useless in water, as it does not get air
+        event.setCancelled(true);
+    }
+    
+    @EventHandler(priority = EventPriority.HIGHEST)
+    private void onPlayerPortalTravel(PlayerPortalEvent event) {
+        // We have to prevent the teleport event to workaround a citizen bug
+        // If a npc travells through a portal it comes invincible
+        if (event.getPlayer() != terminator.getEntity()) return;
+        event.setCancelled(true);
+    }
+    
+    @EventHandler(priority = EventPriority.MONITOR)
+    private void onPlayerPortalTravelMonitor(PlayerPortalEvent event) {
+        // This creates an effect that the NPC walked through the portal with the player
+        if (event.isCancelled()) return;
+        if (getLivingEntity() == null) return;
+        if (event.getFrom().getWorld() != getLivingEntity().getWorld()) return;
+        if (event.getFrom().distance(getLivingEntity().getLocation()) > 15) return;
+        if (getTarget() != null && getTarget() != event.getPlayer() && getLivingEntity().getWorld() == getTarget().getWorld() && getLivingEntity().getLocation().distance(event.getFrom()) > getLivingEntity().getLocation().distance(getTarget().getLocation())) return;
+        
+        new BukkitRunnable() {
+            @Override
+            public void run() {
+                Bukkit.broadcastMessage("Scheduled for tp");
+                targetsSwitchedWorldsLocation = event.getTo().subtract(0.5, 2, 0.5);
+                followThroughDimension = 1;
+            }
+        }.runTaskLater(TerminatorNPC.getPlugin(), 120);
+    }
+    
+    @EventHandler
+    private void onEntityTarget(EntityTargetLivingEntityEvent event) {
+        if (event.getTarget() != getLivingEntity()) return;
+        event.setCancelled(true);
+    }
 
     public Player getTarget(){
-        return Bukkit.getPlayer(activeTarget);
+        return activeTarget != null ? Bukkit.getPlayer(activeTarget) : null;
     }
 
     private List<Entity> getNearbyEntities(int range){
@@ -948,11 +1034,6 @@ public class TerminatorTrait extends Trait {
     }
 
     public LivingEntity getLivingEntity(){
-        if (npc.getEntity() != null){
-            return (LivingEntity) npc.getEntity();
-        }
-        else {
-            return null;
-        }
+        return npc.getEntity() != null ? (LivingEntity) npc.getEntity() : null;
     }
 }

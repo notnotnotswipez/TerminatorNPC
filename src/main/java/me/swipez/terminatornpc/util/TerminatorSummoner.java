@@ -41,7 +41,11 @@ public class TerminatorSummoner {
         for (int i = 0; i < amount; i++){
             NPC npc = new CitizensNPC(UUID.randomUUID(), TerminatorNPC.getUniqueID(), name, EntityControllers.createForType(EntityType.PLAYER), CitizensAPI.getNPCRegistry());
             npc.spawn(location);
-            npc.data().set(NPC.DEFAULT_PROTECTED_METADATA, false);
+            npc.data().set(NPC.Metadata.DEFAULT_PROTECTED, false);
+            npc.data().set(NPC.Metadata.TARGETABLE, false);
+            npc.data().set(NPC.Metadata.COLLIDABLE, true);
+            npc.data().set(NPC.Metadata.FLUID_PUSHABLE, true);
+            npc.data().set(NPC.Metadata.SWIMMING, true);
 
             npc.getNavigator().getLocalParameters()
                     .attackRange(10)
